@@ -4,3 +4,4 @@ httpx
 python-dotenv
 pytest
 py-key-value-aio[redis]
+pytest-asyncio
