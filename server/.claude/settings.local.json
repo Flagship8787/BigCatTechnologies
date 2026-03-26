@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node \"$HOME/.claude/get-shit-done/bin/gsd-tools.cjs\" agent-skills gsd-project-researcher)",
+      "Bash(node \"$HOME/.claude/get-shit-done/bin/gsd-tools.cjs\" agent-skills gsd-research-synthesizer)",
+      "Bash(node \"$HOME/.claude/get-shit-done/bin/gsd-tools.cjs\" agent-skills gsd-roadmapper)",
+      "Read(//home/theclaw/Desktop/projects/BigCatTechLab/server/$HOME/.claude/get-shit-done/**)",
+      "Bash(node $HOME/.claude/get-shit-done/bin/gsd-tools.cjs --help)"
+    ]
+  }
+}
