@@ -133,7 +133,7 @@ from fastmcp import FastMCP
 from app.mcp.server import mcp_server
 from app.routers import blog, projects, resume
 
-app = FastAPI(title="BigCatTechLab API")
+app = FastAPI(title="BigCatTechnologies API")
 
 # Mount MCP as ASGI sub-app at /mcp
 # FastMCP v2+ exposes .asgi_app() or similar — verify exact API
@@ -150,7 +150,7 @@ app.include_router(resume.router)
 from fastmcp import FastMCP
 from app.mcp.tools import blog_tools, project_tools, resume_tools
 
-mcp_server = FastMCP(name="BigCatTechLab")
+mcp_server = FastMCP(name="BigCatTechnologies")
 
 # Register tools from each domain module
 blog_tools.register(mcp_server)

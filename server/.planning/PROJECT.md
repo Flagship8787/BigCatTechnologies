@@ -1,8 +1,8 @@
-# BigCatTechLab Server
+# BigCatTechnologies Server
 
 ## What This Is
 
-A FastAPI + FastMCP backend for bigcattechlab.com — a personal hub and self-advertisement platform. It serves a portfolio of personal projects, a resume, and a blog, while also exposing an MCP interface so AI agents can read site content and interact with personal projects.
+A FastAPI + FastMCP backend for bigcattechnologies.com — a personal hub and self-advertisement platform. It serves a portfolio of personal projects, a resume, and a blog, while also exposing an MCP interface so AI agents can read site content and interact with personal projects.
 
 ## Core Value
 
@@ -33,7 +33,7 @@ A single authenticated backend that powers both the public-facing website and an
 
 ## Context
 
-- Hosted at bigcattechlab.com
+- Hosted at bigcattechnologies.com
 - The MCP integration (FastMCP) is a key differentiator — the backend doubles as an MCP server so agents (e.g., Claude, Cursor) can query projects, read blog posts, and eventually trigger project actions
 - Personal projects vary in type (web services, scripts, hardware/IoT) — the MCP interface should be extensible as new projects are added
 - Auth0 for SSO means no custom auth implementation needed; integration via OAuth2/JWT
@@ -42,7 +42,7 @@ A single authenticated backend that powers both the public-facing website and an
 
 - **Tech Stack**: Python, FastAPI, FastMCP — established by user preference
 - **Auth**: Auth0 SSO only — no custom auth system
-- **Deployment**: Must be hostable at bigcattechlab.com (likely containerized or VPS)
+- **Deployment**: Must be hostable at bigcattechnologies.com (likely containerized or VPS)
 
 ## Key Decisions
 

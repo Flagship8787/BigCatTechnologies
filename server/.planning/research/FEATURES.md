@@ -237,5 +237,5 @@ The MCP interface is the genuine differentiator. No mainstream portfolio solutio
 
 ---
 
-*Feature research for: BigCatTechLab Server (FastAPI + FastMCP personal portfolio/hub backend)*
+*Feature research for: BigCatTechnologies Server (FastAPI + FastMCP personal portfolio/hub backend)*
 *Researched: 2026-03-25*

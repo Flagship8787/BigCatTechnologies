@@ -1,13 +1,13 @@
 # Project Research Summary
 
-**Project:** BigCatTechLab Server
+**Project:** BigCatTechnologies Server
 **Domain:** FastAPI + FastMCP personal portfolio/hub backend with Auth0 SSO and PostgreSQL
 **Researched:** 2026-03-25
 **Confidence:** MEDIUM (no live web access during research; all findings from training data through August 2025)
 
 ## Executive Summary
 
-BigCatTechLab Server is a personal portfolio backend with a genuine differentiator: a Model Context Protocol (MCP) interface that lets AI agents (Claude, Cursor) read and eventually act on the owner's content. The recommended approach is a single Python process running FastAPI for HTTP REST endpoints alongside FastMCP mounted as an ASGI sub-application at `/mcp`. Both surfaces share a service layer that sits in front of an async SQLAlchemy + PostgreSQL database, eliminating logic duplication. Auth0 JWT validation gates all write operations using FastAPI's dependency injection, while public read routes require no authentication. This architecture is well-understood, has strong community precedent, and is deployable as a single Docker container behind nginx.
+BigCatTechnologies Server is a personal portfolio backend with a genuine differentiator: a Model Context Protocol (MCP) interface that lets AI agents (Claude, Cursor) read and eventually act on the owner's content. The recommended approach is a single Python process running FastAPI for HTTP REST endpoints alongside FastMCP mounted as an ASGI sub-application at `/mcp`. Both surfaces share a service layer that sits in front of an async SQLAlchemy + PostgreSQL database, eliminating logic duplication. Auth0 JWT validation gates all write operations using FastAPI's dependency injection, while public read routes require no authentication. This architecture is well-understood, has strong community precedent, and is deployable as a single Docker container behind nginx.
 
 The core build order is dictated by hard dependencies: config and secrets management must come first (before any code is committed), followed by the database layer (models and migrations), then the shared service layer, then REST routes, then Auth0 auth, and finally the FastMCP mount. The MCP layer is the last thing added because it depends on everything else being correct first — MCP tools are thin wrappers over already-tested services. This order also maps directly to the pitfall profile: the most dangerous mistakes cluster in the earliest phases (secrets management, async database setup, Auth0 configuration) and must be addressed before any feature work begins.
 

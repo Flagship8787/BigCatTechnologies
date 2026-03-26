@@ -72,7 +72,7 @@ from fastapi import FastAPI
 from fastmcp import FastMCP
 
 app = FastAPI()
-mcp = FastMCP("BigCatTechLab")
+mcp = FastMCP("BigCatTechnologies")
 
 # Define MCP tools/resources on mcp instance
 @mcp.tool()
@@ -83,7 +83,7 @@ async def get_blog_posts() -> list[dict]:
 app.mount("/mcp", mcp.get_asgi_app())
 ```
 
-The MCP server is accessible via HTTP at `/mcp` using the MCP protocol (SSE or streamable HTTP transport). AI agents (Claude Desktop, Cursor) connect to `https://bigcattechlab.com/mcp`.
+The MCP server is accessible via HTTP at `/mcp` using the MCP protocol (SSE or streamable HTTP transport). AI agents (Claude Desktop, Cursor) connect to `https://bigcattechnologies.com/mcp`.
 
 **Auth on MCP routes:** FastMCP v2 supports adding middleware/dependencies to the mounted sub-app, but it is less ergonomic than FastAPI's native dependency injection. For the owner-only admin pattern, the simplest approach is to add bearer token validation as ASGI middleware on the `/mcp` mount, rather than trying to use FastAPI's `Depends()` system within MCP tool definitions. Verify current FastMCP docs for the recommended pattern — this area was evolving rapidly.
 
@@ -93,8 +93,8 @@ The MCP server is accessible via HTTP at `/mcp` using the MCP protocol (SSE or s
 
 ```bash
 # Create project with uv
-uv init bigcattechlab-server
-cd bigcattechlab-server
+uv init bigcattechnologies-server
+cd bigcattechnologies-server
 
 # Core runtime
 uv add fastapi uvicorn[standard] fastmcp
@@ -144,7 +144,7 @@ uv add --dev pytest pytest-asyncio ruff mypy
 
 ## Stack Patterns by Variant
 
-**If deploying on a VPS (most likely for bigcattechlab.com):**
+**If deploying on a VPS (most likely for bigcattechnologies.com):**
 - Use Docker + docker-compose for local parity
 - Single container: Uvicorn serving FastAPI + FastMCP on one port (e.g., 8000)
 - Nginx reverse proxy in front: handles TLS, forwards to uvicorn
