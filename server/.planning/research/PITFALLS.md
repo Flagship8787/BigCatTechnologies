@@ -17,7 +17,7 @@ JWT validation silently rejects all tokens or raises `InvalidAudienceError` at r
 Auth0 issues tokens with an `aud` (audience) claim set to the API identifier you configure in the Auth0 dashboard. If `python-jose` or `authlib` is asked to validate against the wrong audience string — or audience validation is skipped entirely — all tokens are rejected. Developers copy example code that hardcodes `aud` as the Auth0 client ID instead of the API identifier (these are different values).
 
 **How to avoid:**
-- Set `AUTH0_AUDIENCE` to the exact API identifier string configured in Auth0 dashboard (e.g., `https://api.bigcattechlab.com`), NOT the client ID.
+- Set `AUTH0_AUDIENCE` to the exact API identifier string configured in Auth0 dashboard (e.g., `https://api.bigcattechnologies.com`), NOT the client ID.
 - Pass `audience=AUTH0_AUDIENCE` explicitly to every `jwt.decode()` call.
 - Add an integration test that validates a real Auth0 test token against your decode logic before any route is built.
 
@@ -118,13 +118,13 @@ Auth is treated as binary (authenticated vs not). The MCP interface is "for the 
 ### Pitfall 6: CORS Wildcard in Production
 
 **What goes wrong:**
-API returns `Access-Control-Allow-Origin: *` in production. The frontend on `bigcattechlab.com` works fine but browsers allow any origin to call the API with credentials, defeating same-origin protection.
+API returns `Access-Control-Allow-Origin: *` in production. The frontend on `bigcattechnologies.com` works fine but browsers allow any origin to call the API with credentials, defeating same-origin protection.
 
 **Why it happens:**
 `CORSMiddleware(app, allow_origins=["*"])` is copied from the FastAPI docs tutorial to get things working locally and never updated before deployment. Since the portfolio frontend works, it's never noticed.
 
 **How to avoid:**
-- Set `allow_origins` to exact allowed origins: `["https://bigcattechlab.com"]`.
+- Set `allow_origins` to exact allowed origins: `["https://bigcattechnologies.com"]`.
 - Use an environment variable `ALLOWED_ORIGINS` that is `["*"]` in development and the real domain in production.
 - Set `allow_credentials=True` only if cookies are used (not needed for Bearer token auth).
 
@@ -240,7 +240,7 @@ Personal projects often skip secret management rigor. `.env` is created locally,
 
 | Integration | Common Mistake | Correct Approach |
 |-------------|----------------|------------------|
-| Auth0 + FastAPI | Validating tokens with the Auth0 client ID as audience | Use the API Identifier (e.g., `https://api.bigcattechlab.com`), not the client ID |
+| Auth0 + FastAPI | Validating tokens with the Auth0 client ID as audience | Use the API Identifier (e.g., `https://api.bigcattechnologies.com`), not the client ID |
 | Auth0 + FastAPI | Fetching JWKS inside the dependency function (per-request) | Initialize `PyJWKClient` once at app startup; it caches keys internally |
 | Auth0 + FastAPI | Building issuer as `https://domain` (no trailing slash) | Auth0 `iss` claim always has a trailing slash: `https://domain/` |
 | FastMCP + FastAPI | Mounting `mcp_app` and assuming FastAPI `Depends()` protects it | FastMCP sub-app is outside DI tree; add auth at the ASGI middleware layer |

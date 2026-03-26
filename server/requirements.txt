@@ -1,0 +1,6 @@
+fastapi
+fastmcp
+httpx
+python-dotenv
+pytest
+py-key-value-aio[redis]

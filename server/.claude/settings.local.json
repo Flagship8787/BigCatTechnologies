@@ -4,8 +4,10 @@
       "Bash(node \"$HOME/.claude/get-shit-done/bin/gsd-tools.cjs\" agent-skills gsd-project-researcher)",
       "Bash(node \"$HOME/.claude/get-shit-done/bin/gsd-tools.cjs\" agent-skills gsd-research-synthesizer)",
       "Bash(node \"$HOME/.claude/get-shit-done/bin/gsd-tools.cjs\" agent-skills gsd-roadmapper)",
-      "Read(//home/theclaw/Desktop/projects/BigCatTechLab/server/$HOME/.claude/get-shit-done/**)",
-      "Bash(node $HOME/.claude/get-shit-done/bin/gsd-tools.cjs --help)"
+      "Read(//home/theclaw/Desktop/projects/BigCatTechnologies/server/$HOME/.claude/get-shit-done/**)",
+      "Bash(node $HOME/.claude/get-shit-done/bin/gsd-tools.cjs --help)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ]
   }
 }

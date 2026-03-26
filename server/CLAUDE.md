@@ -1,9 +1,9 @@
 <!-- GSD:project-start source:PROJECT.md -->
 ## Project
 
-**BigCatTechLab Server**
+**BigCatTechnologies Server**
 
-A FastAPI + FastMCP backend for bigcattechlab.com — a personal hub and self-advertisement platform. It serves a portfolio of personal projects, a resume, and a blog, while also exposing an MCP interface so AI agents can read site content and interact with personal projects.
+A FastAPI + FastMCP backend for bigcattechnologies.com — a personal hub and self-advertisement platform. It serves a portfolio of personal projects, a resume, and a blog, while also exposing an MCP interface so AI agents can read site content and interact with personal projects.
 
 **Core Value:** A single authenticated backend that powers both the public-facing website and an MCP interface for AI agents to discover and interact with the owner's projects.
 
@@ -11,7 +11,7 @@ A FastAPI + FastMCP backend for bigcattechlab.com — a personal hub and self-ad
 
 - **Tech Stack**: Python, FastAPI, FastMCP — established by user preference
 - **Auth**: Auth0 SSO only — no custom auth system
-- **Deployment**: Must be hostable at bigcattechlab.com (likely containerized or VPS)
+- **Deployment**: Must be hostable at bigcattechnologies.com (likely containerized or VPS)
 <!-- GSD:project-end -->
 
 <!-- GSD:stack-start source:research/STACK.md -->

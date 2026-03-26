@@ -1,4 +1,4 @@
-# Requirements: BigCatTechLab Server
+# Requirements: BigCatTechnologies Server
 
 **Defined:** 2026-03-25
 **Core Value:** A single authenticated backend that powers both the public-facing website and an MCP interface for AI agents to discover and interact with the owner's projects.
