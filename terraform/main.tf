@@ -68,6 +68,81 @@ resource "google_service_account_iam_member" "github_wif_binding" {
   member             = "principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.github.name}/attribute.repository/${var.github_repo}"
 }
 
+# ---------------------------------------------------------------------------
+# React Client — Artifact Registry, Cloud Run, IAM
+# ---------------------------------------------------------------------------
+
+# Artifact Registry repository for the React client image
+resource "google_artifact_registry_repository" "client" {
+  location      = var.region
+  repository_id = "bigcat-client"
+  description   = "BigCat Technologies React client images"
+  format        = "DOCKER"
+}
+
+# Service account for the client Cloud Run service
+resource "google_service_account" "cloud_run_client" {
+  account_id   = "cloud-run-client"
+  display_name = "Cloud Run - Client"
+}
+
+# Grant the client service account read access to the client registry
+resource "google_artifact_registry_repository_iam_member" "cloud_run_client_reader" {
+  location   = google_artifact_registry_repository.client.location
+  repository = google_artifact_registry_repository.client.name
+  role       = "roles/artifactregistry.reader"
+  member     = "serviceAccount:${google_service_account.cloud_run_client.email}"
+}
+
+# Cloud Run v2 service for the React client
+resource "google_cloud_run_v2_service" "client" {
+  name     = "bigcat-client"
+  location = var.region
+  ingress  = "INGRESS_TRAFFIC_ALL"
+
+  template {
+    service_account = google_service_account.cloud_run_client.email
+
+    scaling {
+      min_instance_count = 0
+      max_instance_count = 3
+    }
+
+    containers {
+      image = "us-central1-docker.pkg.dev/${var.project_id}/bigcat-client/client:latest"
+
+      ports {
+        container_port = 80
+      }
+
+      resources {
+        limits = {
+          cpu    = "500m"
+          memory = "256Mi"
+        }
+      }
+    }
+  }
+}
+
+# Allow unauthenticated (public) access to the client service
+resource "google_cloud_run_v2_service_iam_member" "client_public" {
+  project  = google_cloud_run_v2_service.client.project
+  location = google_cloud_run_v2_service.client.location
+  name     = google_cloud_run_v2_service.client.name
+  role     = "roles/run.invoker"
+  member   = "allUsers"
+}
+
+# Grant GitHub Actions pusher the ability to deploy the client service
+resource "google_cloud_run_v2_service_iam_member" "github_actions_client_developer" {
+  project  = google_cloud_run_v2_service.client.project
+  location = google_cloud_run_v2_service.client.location
+  name     = google_cloud_run_v2_service.client.name
+  role     = "roles/run.developer"
+  member   = "serviceAccount:${google_service_account.github_actions.email}"
+}
+
 # Enable Cloud Run API
 resource "google_project_service" "run" {
   service            = "run.googleapis.com"
