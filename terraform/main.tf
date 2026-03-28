@@ -144,6 +144,13 @@ resource "google_cloud_run_v2_service_iam_member" "github_actions_client_develop
   member   = "serviceAccount:${google_service_account.github_actions.email}"
 }
 
+# Allow GitHub Actions to act as the client Cloud Run service account (required for gcloud run deploy)
+resource "google_service_account_iam_member" "github_actions_actAs_cloud_run_client" {
+  service_account_id = google_service_account.cloud_run_client.name
+  role               = "roles/iam.serviceAccountUser"
+  member             = "serviceAccount:${google_service_account.github_actions.email}"
+}
+
 # Enable Cloud Run API
 resource "google_project_service" "run" {
   service            = "run.googleapis.com"
