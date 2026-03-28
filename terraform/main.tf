@@ -221,3 +221,10 @@ resource "google_cloud_run_v2_service_iam_member" "github_actions_deployer" {
   role     = "roles/run.developer"
   member   = "serviceAccount:${google_service_account.github_actions.email}"
 }
+
+# Allow GitHub Actions to act as the server Cloud Run service account (required for gcloud run deploy)
+resource "google_service_account_iam_member" "github_actions_actAs_cloud_run_server" {
+  service_account_id = google_service_account.cloud_run_server.name
+  role               = "roles/iam.serviceAccountUser"
+  member             = "serviceAccount:${google_service_account.github_actions.email}"
+}
