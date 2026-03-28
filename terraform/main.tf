@@ -96,9 +96,10 @@ resource "google_artifact_registry_repository_iam_member" "cloud_run_client_read
 
 # Cloud Run v2 service for the React client
 resource "google_cloud_run_v2_service" "client" {
-  name     = "bigcat-client"
-  location = var.region
-  ingress  = "INGRESS_TRAFFIC_ALL"
+  name                = "bigcat-client"
+  location            = var.region
+  ingress             = "INGRESS_TRAFFIC_ALL"
+  deletion_protection = false
 
   template {
     service_account = google_service_account.cloud_run_client.email
@@ -165,9 +166,10 @@ resource "google_artifact_registry_repository_iam_member" "cloud_run_reader" {
 
 # Cloud Run v2 Service
 resource "google_cloud_run_v2_service" "server" {
-  name     = "bigcat-server"
-  location = var.region
-  ingress  = "INGRESS_TRAFFIC_ALL"
+  name                = "bigcat-server"
+  location            = var.region
+  ingress             = "INGRESS_TRAFFIC_ALL"
+  deletion_protection = false
 
   depends_on = [google_project_service.run]
 
