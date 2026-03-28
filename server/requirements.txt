@@ -5,3 +5,9 @@ python-dotenv
 pytest
 py-key-value-aio[redis]
 pytest-asyncio
+sqlalchemy[asyncio]
+asyncpg
+alembic
+aiosqlite
+pydantic
+uvicorn
