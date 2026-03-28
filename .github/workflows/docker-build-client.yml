@@ -1,4 +1,4 @@
-# Builds and pushes the React client Docker image to Google Artifact Registry after tests pass on main.
+# Builds, pushes, and deploys the React client Docker image to Google Artifact Registry + Cloud Run after tests pass on main.
 # Uses Workload Identity Federation (keyless auth).
 # Required secrets: GCP_PROJECT_ID, GCP_WORKLOAD_IDENTITY_PROVIDER, GCP_SERVICE_ACCOUNT, VITE_API_URL
 
@@ -53,3 +53,14 @@ jobs:
           tags: |
             us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/bigcat-client/client:latest
             us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/bigcat-client/client:${{ github.event.workflow_run.head_sha }}
+
+      - name: Set up gcloud CLI
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy bigcat-client \
+            --image us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/bigcat-client/client:${{ github.event.workflow_run.head_sha }} \
+            --region us-central1 \
+            --project ${{ secrets.GCP_PROJECT_ID }} \
+            --quiet
