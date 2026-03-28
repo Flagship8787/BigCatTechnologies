@@ -1,4 +1,5 @@
 import os
+from urllib.parse import quote_plus
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy.orm import DeclarativeBase
 
@@ -9,9 +10,8 @@ DB_USER = os.getenv("DB_USER", "postgres")
 DB_PASSWORD = os.getenv("DB_PASSWORD", "")
 
 # asyncpg requires Unix socket paths to be passed via connect_args, not in the URL.
-# URL uses localhost as a placeholder; the actual host (socket path or hostname)
-# is passed separately so asyncpg handles it correctly.
-DATABASE_URL = f"postgresql+asyncpg://{DB_USER}:{DB_PASSWORD}@/{DB_NAME}"
+# Password is URL-encoded to handle special characters safely.
+DATABASE_URL = f"postgresql+asyncpg://{quote_plus(DB_USER)}:{quote_plus(DB_PASSWORD)}@/{DB_NAME}"
 CONNECT_ARGS = {"host": DB_HOST}
 
 engine = create_async_engine(DATABASE_URL, connect_args=CONNECT_ARGS, echo=False)
