@@ -1,4 +1,4 @@
-# Builds and pushes the Docker image to Google Artifact Registry after tests pass on main.
+# Builds, pushes, and deploys the Docker image to Google Artifact Registry + Cloud Run after tests pass on main.
 # Uses Workload Identity Federation (keyless auth).
 # Required secrets: GCP_PROJECT_ID, GCP_WORKLOAD_IDENTITY_PROVIDER, GCP_SERVICE_ACCOUNT
 
@@ -51,3 +51,14 @@ jobs:
           tags: |
             us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/bigcat-app/server:latest
             us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/bigcat-app/server:${{ github.event.workflow_run.head_sha }}
+
+      - name: Set up gcloud CLI
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy bigcat-server \
+            --image us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/bigcat-app/server:${{ github.event.workflow_run.head_sha }} \
+            --region us-central1 \
+            --project ${{ secrets.GCP_PROJECT_ID }} \
+            --quiet
