@@ -12,3 +12,13 @@ output "registry_url" {
   description = "The Artifact Registry repository URL for Docker pushes"
   value       = "${var.region}-docker.pkg.dev/${var.project_id}/${google_artifact_registry_repository.app.repository_id}"
 }
+
+output "client_registry_url" {
+  description = "The Artifact Registry URL for the React client repo"
+  value       = "${var.region}-docker.pkg.dev/${var.project_id}/${google_artifact_registry_repository.client.repository_id}"
+}
+
+output "client_cloud_run_url" {
+  description = "The Cloud Run URL for the React client service"
+  value       = google_cloud_run_v2_service.client.uri
+}
