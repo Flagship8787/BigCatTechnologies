@@ -8,8 +8,10 @@ Provisions the Google Cloud infrastructure required for the GitHub Actions Docke
 - **Workload Identity Federation** — keyless authentication so GitHub Actions can push images without long-lived service account keys
   - Workload Identity Pool: `github-pool`
   - Workload Identity Provider: `github-provider` (OIDC, issuer: `https://token.actions.githubusercontent.com`)
-- **Service Account** (`github-actions-pusher`) — granted `roles/artifactregistry.writer` on the repository
+- **Service Account** (`github-actions-pusher`) — granted `roles/artifactregistry.writer` on the repository and `roles/run.developer` on the Cloud Run service
 - **IAM binding** — allows the WIF pool to impersonate the service account for the configured GitHub repository
+- **Cloud Run v2 service** (`bigcat-server`) — hosts the FastAPI/FastMCP Python server (port 3000) with public access, 0–3 instances, and a `/health` startup probe
+- **Service Account** (`cloud-run-server`) — dedicated SA for the Cloud Run service, granted `roles/artifactregistry.reader` to pull images
 
 ## Prerequisites
 
@@ -20,6 +22,7 @@ Provisions the Google Cloud infrastructure required for the GitHub Actions Docke
   - `iam.googleapis.com`
   - `iamcredentials.googleapis.com`
   - `sts.googleapis.com`
+  - `run.googleapis.com` (managed by Terraform via `google_project_service`)
 
 ## Usage
 
@@ -47,6 +50,8 @@ Provisions the Google Cloud infrastructure required for the GitHub Actions Docke
    | *(your GCP project ID)*       | `GCP_PROJECT_ID`                   |
 
    `GCP_PROJECT_ID` is not emitted as an output — use the same value you set in `terraform.tfvars`.
+
+   The `cloud_run_url` output gives you the public URL of the deployed Cloud Run service.
 
 ## Security notes
 

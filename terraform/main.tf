@@ -67,3 +67,80 @@ resource "google_service_account_iam_member" "github_wif_binding" {
   role               = "roles/iam.workloadIdentityUser"
   member             = "principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.github.name}/attribute.repository/${var.github_repo}"
 }
+
+# Enable Cloud Run API
+resource "google_project_service" "run" {
+  service            = "run.googleapis.com"
+  disable_on_destroy = false
+}
+
+# Service Account for Cloud Run
+resource "google_service_account" "cloud_run_server" {
+  account_id   = "cloud-run-server"
+  display_name = "Cloud Run - Server"
+}
+
+# Grant Cloud Run SA pull access to Artifact Registry
+resource "google_artifact_registry_repository_iam_member" "cloud_run_reader" {
+  location   = google_artifact_registry_repository.app.location
+  repository = google_artifact_registry_repository.app.name
+  role       = "roles/artifactregistry.reader"
+  member     = "serviceAccount:${google_service_account.cloud_run_server.email}"
+}
+
+# Cloud Run v2 Service
+resource "google_cloud_run_v2_service" "server" {
+  name     = "bigcat-server"
+  location = var.region
+  ingress  = "INGRESS_TRAFFIC_ALL"
+
+  depends_on = [google_project_service.run]
+
+  template {
+    service_account = google_service_account.cloud_run_server.email
+
+    scaling {
+      min_instance_count = 0
+      max_instance_count = 3
+    }
+
+    containers {
+      image = "us-central1-docker.pkg.dev/${var.project_id}/bigcat-app/server:latest"
+
+      ports {
+        container_port = 3000
+      }
+
+      resources {
+        limits = {
+          cpu    = "1"
+          memory = "512Mi"
+        }
+      }
+
+      startup_probe {
+        initial_delay_seconds = 5
+        http_get {
+          path = "/health"
+          port = 3000
+        }
+      }
+    }
+  }
+}
+
+# Allow unauthenticated invocations
+resource "google_cloud_run_v2_service_iam_member" "public_invoker" {
+  name     = google_cloud_run_v2_service.server.name
+  location = google_cloud_run_v2_service.server.location
+  role     = "roles/run.invoker"
+  member   = "allUsers"
+}
+
+# Grant github-actions-pusher the Cloud Run developer role for CI deployments
+resource "google_cloud_run_v2_service_iam_member" "github_actions_deployer" {
+  name     = google_cloud_run_v2_service.server.name
+  location = google_cloud_run_v2_service.server.location
+  role     = "roles/run.developer"
+  member   = "serviceAccount:${google_service_account.github_actions.email}"
+}
