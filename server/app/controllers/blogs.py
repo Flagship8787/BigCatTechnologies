@@ -3,7 +3,7 @@ from fastapi import FastAPI, HTTPException, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 from app.db import get_db
 from app.models.blog import Blog
@@ -21,6 +21,8 @@ class BlogUpdate(BaseModel):
 
 
 class PostResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: str
     blog_id: str
     title: str
@@ -28,31 +30,26 @@ class PostResponse(BaseModel):
     created_at: str
     updated_at: str
 
-    class Config:
-        from_attributes = True
-
 
 class BlogResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: str
     name: str
     description: str
     created_at: str
     updated_at: str
 
-    class Config:
-        from_attributes = True
-
 
 class BlogWithPostsResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: str
     name: str
     description: str
     created_at: str
     updated_at: str
     posts: List[PostResponse]
-
-    class Config:
-        from_attributes = True
 
 
 def _blog_to_response(blog: Blog) -> dict:
