@@ -1,12 +1,6 @@
 # Builds and pushes the Docker image to Google Artifact Registry after tests pass on main.
-# Uses Workload Identity Federation (keyless auth): GitHub's OIDC token is exchanged for a
-# short-lived GCP access token — no service account key file is stored as a secret.
-# Required secrets: GCP_PROJECT_ID, GCP_WORKLOAD_IDENTITY_PROVIDER, GCP_SERVICE_ACCOUNT, GITHUB_REPO_SLUG
-#
-# BOOTSTRAP NOTE: The first run requires a manual `terraform apply` locally to create the
-# Workload Identity Federation resources. CI cannot auth to GCP until WIF exists, so you
-# must bootstrap it once from a local machine with GCP credentials. After that, CI handles
-# `terraform apply` automatically on every merge to main.
+# Uses Workload Identity Federation (keyless auth).
+# Required secrets: GCP_PROJECT_ID, GCP_WORKLOAD_IDENTITY_PROVIDER, GCP_SERVICE_ACCOUNT
 
 name: Docker Build and Push
 
@@ -17,42 +11,9 @@ on:
     types: [completed]
 
 jobs:
-  terraform-apply:
-    runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
-
-    permissions:
-      contents: read
-      id-token: write  # Required for Workload Identity Federation
-
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.workflow_run.head_sha }}
-
-      - name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v2
-        with:
-          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
-
-      - name: Set up Terraform
-        uses: hashicorp/setup-terraform@v3
-
-      - name: Terraform Init
-        working-directory: terraform/
-        run: terraform init
-
-      - name: Terraform Apply
-        working-directory: terraform/
-        env:
-          TF_VAR_project_id: ${{ secrets.GCP_PROJECT_ID }}
-          TF_VAR_github_repo: ${{ secrets.REPO_SLUG }}
-        run: terraform apply -auto-approve
-
   build-and-push:
     runs-on: ubuntu-latest
-    needs: terraform-apply
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
 
     permissions:
       contents: read
