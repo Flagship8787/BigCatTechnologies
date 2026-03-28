@@ -308,7 +308,7 @@ resource "google_sql_database_instance" "postgres" {
     }
 
     ip_configuration {
-      ipv4_enabled = false # private only; Cloud Run connects via proxy socket
+      ipv4_enabled = true # Cloud Run connects via Auth Proxy socket, not the public IP
     }
   }
 
