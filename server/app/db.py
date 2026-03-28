@@ -8,9 +8,13 @@ DB_NAME = os.getenv("DB_NAME", "bigcat")
 DB_USER = os.getenv("DB_USER", "postgres")
 DB_PASSWORD = os.getenv("DB_PASSWORD", "")
 
-DATABASE_URL = f"postgresql+asyncpg://{DB_USER}:{DB_PASSWORD}@/{DB_NAME}?host={DB_HOST}"
+# asyncpg requires Unix socket paths to be passed via connect_args, not in the URL.
+# URL uses localhost as a placeholder; the actual host (socket path or hostname)
+# is passed separately so asyncpg handles it correctly.
+DATABASE_URL = f"postgresql+asyncpg://{DB_USER}:{DB_PASSWORD}@/{DB_NAME}"
+CONNECT_ARGS = {"host": DB_HOST}
 
-engine = create_async_engine(DATABASE_URL, echo=False)
+engine = create_async_engine(DATABASE_URL, connect_args=CONNECT_ARGS, echo=False)
 
 AsyncSessionLocal = async_sessionmaker(
     bind=engine,
