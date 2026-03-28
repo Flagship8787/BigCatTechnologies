@@ -47,7 +47,7 @@ jobs:
         working-directory: terraform/
         env:
           TF_VAR_project_id: ${{ secrets.GCP_PROJECT_ID }}
-          TF_VAR_github_repo: ${{ secrets.GITHUB_REPO_SLUG }}
+          TF_VAR_github_repo: ${{ secrets.REPO_SLUG }}
         run: terraform apply -auto-approve
 
   build-and-push:
