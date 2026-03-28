@@ -297,6 +297,7 @@ resource "google_sql_database_instance" "postgres" {
 
   settings {
     tier              = "db-f1-micro"
+    edition           = "ENTERPRISE"
     availability_type = "ZONAL"
     disk_size         = 10
     disk_autoresize   = true
