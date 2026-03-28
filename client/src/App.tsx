@@ -1,6 +1,12 @@
+import { Routes, Route } from 'react-router-dom'
+import { useAuth0 } from '@auth0/auth0-react'
+import ProtectedRoute from './components/ProtectedRoute'
+import Dashboard from './pages/Dashboard'
 import './App.css'
 
-function App() {
+function Home() {
+  const { isAuthenticated, isLoading, loginWithRedirect, logout, user } = useAuth0()
+
   return (
     <div className="app">
       <header className="app-header">
@@ -9,6 +15,23 @@ function App() {
           <a href="/mcp">MCP</a>
           <a href="/about">About</a>
           <a href="/contact">Contact</a>
+          {!isLoading && (
+            isAuthenticated ? (
+              <>
+                <a href="/dashboard">{user?.email}</a>
+                <button
+                  className="nav-button"
+                  onClick={() => logout({ logoutParams: { returnTo: window.location.origin } })}
+                >
+                  Log out
+                </button>
+              </>
+            ) : (
+              <button className="nav-button" onClick={() => loginWithRedirect()}>
+                Log in
+              </button>
+            )
+          )}
         </nav>
       </header>
 
@@ -43,4 +66,18 @@ function App() {
   )
 }
 
-export default App
+export default function App() {
+  return (
+    <Routes>
+      <Route path="/" element={<Home />} />
+      <Route
+        path="/dashboard"
+        element={
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
+        }
+      />
+    </Routes>
+  )
+}

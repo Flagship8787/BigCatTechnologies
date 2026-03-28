@@ -44,6 +44,31 @@
   color: #fff;
 }
 
+.nav-button {
+  font-size: 14px;
+  color: #888;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.15s ease;
+}
+
+.nav-button:hover {
+  color: #fff;
+}
+
+.auth-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100svh;
+  color: #555;
+  font-size: 14px;
+}
+
 .app-main {
   flex: 1;
   display: flex;
