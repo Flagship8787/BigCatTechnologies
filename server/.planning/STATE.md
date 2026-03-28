@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-03-25)
 Phase: 1 of 2 (Scaffold)
 Plan: 0 of ? in current phase
 Status: Ready to plan
-Last activity: 2026-03-25 — Roadmap created; ready to plan Phase 1
+Last activity: 2026-03-28 - Completed quick task 260328-gez: Add Blog and Post models with a full CRUD API
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -54,8 +54,14 @@ None yet.
 
 - Phase 2: FastMCP v2 exact auth hook API needs verification against current gofastmcp.com docs before implementation — training data is August 2025, API may have changed
 
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Directory |
+|---|-------------|------|--------|-----------|
+| 260328-gez | Add Blog and Post models with a full CRUD API | 2026-03-28 | 093be07 | [260328-gez-add-blog-and-post-models-with-a-full-cru](.planning/quick/260328-gez-add-blog-and-post-models-with-a-full-cru/) |
+
 ## Session Continuity
 
-Last session: 2026-03-25
-Stopped at: Roadmap created; Phase 1 ready to plan
+Last session: 2026-03-28
+Stopped at: 2026-03-28 - Completed quick task 260328-gez: Add Blog and Post models with a full CRUD API
 Resume file: None
