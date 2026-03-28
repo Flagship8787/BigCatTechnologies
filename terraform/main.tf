@@ -188,6 +188,14 @@ resource "google_cloud_run_v2_service" "server" {
       max_instance_count = 3
     }
 
+    # Attach Cloud SQL instance so the proxy socket is available
+    volumes {
+      name = "cloudsql"
+      cloud_sql_instance {
+        instances = [google_sql_database_instance.postgres.connection_name]
+      }
+    }
+
     containers {
       image = "us-central1-docker.pkg.dev/${var.project_id}/bigcat-app/server:latest"
 
@@ -200,6 +208,34 @@ resource "google_cloud_run_v2_service" "server" {
           cpu    = "1"
           memory = "512Mi"
         }
+      }
+
+      # Database connection env vars for SQLAlchemy / asyncpg
+      env {
+        name  = "DB_HOST"
+        value = "/cloudsql/${google_sql_database_instance.postgres.connection_name}"
+      }
+      env {
+        name  = "DB_NAME"
+        value = "bigcat"
+      }
+      env {
+        name  = "DB_USER"
+        value = "bigcat"
+      }
+      env {
+        name = "DB_PASSWORD"
+        value_source {
+          secret_key_ref {
+            secret  = google_secret_manager_secret.db_password.secret_id
+            version = "latest"
+          }
+        }
+      }
+
+      volume_mounts {
+        name       = "cloudsql"
+        mount_path = "/cloudsql"
       }
 
       startup_probe {
@@ -234,4 +270,94 @@ resource "google_service_account_iam_member" "github_actions_actAs_cloud_run_ser
   service_account_id = google_service_account.cloud_run_server.name
   role               = "roles/iam.serviceAccountUser"
   member             = "serviceAccount:${google_service_account.github_actions.email}"
+}
+
+# ---------------------------------------------------------------------------
+# Cloud SQL — Postgres
+# ---------------------------------------------------------------------------
+
+# Enable required APIs
+resource "google_project_service" "sqladmin" {
+  service            = "sqladmin.googleapis.com"
+  disable_on_destroy = false
+}
+
+resource "google_project_service" "secretmanager" {
+  service            = "secretmanager.googleapis.com"
+  disable_on_destroy = false
+}
+
+# Cloud SQL Postgres instance
+resource "google_sql_database_instance" "postgres" {
+  name             = "bigcat-postgres"
+  database_version = "POSTGRES_16"
+  region           = var.region
+
+  depends_on = [google_project_service.sqladmin]
+
+  settings {
+    tier              = "db-f1-micro"
+    availability_type = "ZONAL"
+    disk_size         = 10
+    disk_autoresize   = true
+
+    backup_configuration {
+      enabled    = true
+      start_time = "03:00"
+    }
+
+    ip_configuration {
+      ipv4_enabled = false # private only; Cloud Run connects via proxy socket
+    }
+  }
+
+  deletion_protection = false
+}
+
+# Application database
+resource "google_sql_database" "app" {
+  name     = "bigcat"
+  instance = google_sql_database_instance.postgres.name
+}
+
+# Application user
+resource "google_sql_user" "app" {
+  name     = "bigcat"
+  instance = google_sql_database_instance.postgres.name
+  password = var.db_password
+}
+
+# Store DB password in Secret Manager so Cloud Run can reference it
+resource "google_secret_manager_secret" "db_password" {
+  secret_id  = "bigcat-db-password"
+  depends_on = [google_project_service.secretmanager]
+
+  replication {
+    auto {}
+  }
+}
+
+resource "google_secret_manager_secret_version" "db_password" {
+  secret      = google_secret_manager_secret.db_password.id
+  secret_data = var.db_password
+}
+
+# Grant Cloud Run server SA access to the secret
+resource "google_secret_manager_secret_iam_member" "cloud_run_server_db_password" {
+  secret_id = google_secret_manager_secret.db_password.id
+  role      = "roles/secretmanager.secretAccessor"
+  member    = "serviceAccount:${google_service_account.cloud_run_server.email}"
+}
+
+# Grant Cloud Run server SA Cloud SQL client access
+resource "google_project_iam_member" "cloud_run_server_sql_client" {
+  project = var.project_id
+  role    = "roles/cloudsql.client"
+  member  = "serviceAccount:${google_service_account.cloud_run_server.email}"
+}
+
+# Output the instance connection name (needed for Cloud Run cloudsql annotation)
+output "db_instance_connection_name" {
+  value       = google_sql_database_instance.postgres.connection_name
+  description = "Cloud SQL instance connection name for Cloud Run --add-cloudsql-instances"
 }
