@@ -5,57 +5,109 @@
 }
 
 .app-header {
-  padding: 24px 32px;
-  border-bottom: 1px solid var(--border);
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px 48px;
+  border-bottom: 1px solid #222;
+
+  @media (max-width: 640px) {
+    flex-direction: column;
+    gap: 16px;
+    padding: 20px 24px;
+  }
 }
 
-.app-header h1 {
-  margin: 0;
+.wordmark {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: #fff;
+  text-transform: uppercase;
+}
+
+.nav {
+  display: flex;
+  gap: 32px;
+}
+
+.nav a {
+  font-size: 14px;
+  color: #888;
+  text-decoration: none;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  transition: color 0.15s ease;
+}
+
+.nav a:hover {
+  color: #fff;
 }
 
 .app-main {
   flex: 1;
-  padding: 40px 32px;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  justify-content: center;
+  padding: 80px 48px;
+  max-width: 720px;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+
+  @media (max-width: 640px) {
+    padding: 48px 24px;
+  }
+}
+
+.hero {
+  margin-bottom: 56px;
+}
+
+.hero h1 {
+  font-size: 48px;
+  font-weight: 500;
+  letter-spacing: -1px;
+  color: #fff;
+  margin: 0 0 16px;
+
+  @media (max-width: 640px) {
+    font-size: 32px;
+  }
+}
+
+.tagline {
+  font-size: 18px;
+  color: #888;
+  margin: 0;
+}
+
+.bio {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  border-top: 1px solid #222;
+  padding-top: 40px;
+}
+
+.bio p {
+  font-size: 16px;
+  line-height: 1.7;
+  color: #aaa;
+  margin: 0;
 }
 
 .app-footer {
-  padding: 16px 32px;
-  border-top: 1px solid var(--border);
-  text-align: center;
-  font-size: 14px;
-  color: var(--text);
-}
-
-.health-check {
-  background: var(--code-bg);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 24px 32px;
-  min-width: 320px;
-  text-align: left;
-}
-
-.health-dot {
-  display: inline-block;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  margin-right: 8px;
-  vertical-align: middle;
-}
-
-.health-detail {
-  color: var(--text);
-  font-size: 15px;
-}
-
-.health-url {
-  margin-top: 12px !important;
+  padding: 24px 48px;
+  border-top: 1px solid #222;
   font-size: 13px;
-  color: var(--text);
-  font-family: var(--mono);
+  color: #555;
+
+  @media (max-width: 640px) {
+    padding: 20px 24px;
+  }
+}
+
+.app-footer p {
+  margin: 0;
 }
