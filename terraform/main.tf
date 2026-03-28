@@ -117,8 +117,8 @@ resource "google_cloud_run_v2_service" "client" {
 
       resources {
         limits = {
-          cpu    = "500m"
-          memory = "256Mi"
+          cpu    = "1"
+          memory = "512Mi"
         }
       }
     }
