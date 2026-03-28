@@ -18,6 +18,8 @@ COPY --from=builder /usr/local/bin /usr/local/bin
 
 COPY . .
 
+RUN chmod +x start.sh
+
 EXPOSE 3000
 
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "3000"]
+CMD ["./start.sh"]
