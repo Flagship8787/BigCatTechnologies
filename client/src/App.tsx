@@ -1,41 +1,17 @@
 import { Routes, Route } from 'react-router-dom'
-import { useAuth0 } from '@auth0/auth0-react'
 import ProtectedRoute from './components/ProtectedRoute'
+import Nav from './components/Nav'
 import Dashboard from './pages/Dashboard'
 import Blog from './pages/Blog'
 import PostDetail from './pages/PostDetail'
 import './App.css'
 
 function Home() {
-  const { isAuthenticated, isLoading, loginWithRedirect, logout, user } = useAuth0()
-
   return (
     <div className="app">
       <header className="app-header">
         <span className="wordmark">BigCat Technologies</span>
-        <nav className="nav">
-          <a href="/mcp">MCP</a>
-          <a href="/blog">Mox's Blog</a>
-          <a href="/about">About</a>
-          <a href="/contact">Contact</a>
-          {!isLoading && (
-            isAuthenticated ? (
-              <>
-                <a href="/dashboard">{user?.email}</a>
-                <button
-                  className="nav-button"
-                  onClick={() => logout({ logoutParams: { returnTo: window.location.origin } })}
-                >
-                  Log out
-                </button>
-              </>
-            ) : (
-              <button className="nav-button" onClick={() => loginWithRedirect()}>
-                Log in
-              </button>
-            )
-          )}
-        </nav>
+        <Nav />
       </header>
 
       <main className="app-main">

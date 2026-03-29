@@ -2,18 +2,12 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import '../App.css'
 import './Blog.css'
+import Nav from '../components/Nav'
+import type { Post } from '../dtos/Post'
+import { useFormatDate } from '../hooks/useFormatDate'
 
 const BLOG_ID = 'd269d2a7-eecd-4cbf-b6e5-a48025933c7f'
 const API_URL = import.meta.env.VITE_API_URL ?? ''
-
-interface Post {
-  id: string
-  blog_id: string
-  title: string
-  body: string
-  created_at: string
-  updated_at: string
-}
 
 interface BlogData {
   id: string
@@ -24,15 +18,8 @@ interface BlogData {
   posts: Post[]
 }
 
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  })
-}
-
 function PostPreview({ post }: { post: Post }) {
+  const { formatDate } = useFormatDate()
   const preview = post.body.length > 280 ? post.body.slice(0, 280).trimEnd() + '…' : post.body
 
   return (
@@ -81,12 +68,7 @@ export default function Blog() {
         <Link to="/" className="wordmark" style={{ textDecoration: 'none' }}>
           BigCat Technologies
         </Link>
-        <nav className="nav">
-          <a href="/mcp">MCP</a>
-          <a href="/blog">Blog</a>
-          <a href="/about">About</a>
-          <a href="/contact">Contact</a>
-        </nav>
+        <Nav />
       </header>
 
       <main className="app-main blog-main">
