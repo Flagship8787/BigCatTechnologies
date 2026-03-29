@@ -26,6 +26,14 @@ def _post_to_response(post: Post) -> dict:
 
 def register(app: FastAPI):
 
+    @app.get("/posts/{post_id}")
+    async def get_post(post_id: str, db: AsyncSession = Depends(get_db)):
+        result = await db.execute(select(Post).where(Post.id == post_id))
+        post = result.scalar_one_or_none()
+        if post is None:
+            raise HTTPException(status_code=404, detail="Post not found")
+        return _post_to_response(post)
+
     @app.post("/blogs/{blog_id}/posts", status_code=201)
     async def create_post(blog_id: str, data: PostCreate, db: AsyncSession = Depends(get_db)):
         result = await db.execute(select(Blog).where(Blog.id == blog_id))
