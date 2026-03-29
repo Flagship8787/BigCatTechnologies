@@ -37,7 +37,9 @@ function PostPreview({ post }: { post: Post }) {
 
   return (
     <article className="blog-post-preview">
-      <h2 className="blog-post-title">{post.title}</h2>
+      <Link to={`/blog/posts/${post.id}`} className="blog-post-title-link">
+        <h2 className="blog-post-title">{post.title}</h2>
+      </Link>
       <time className="blog-post-date" dateTime={post.created_at}>
         {formatDate(post.created_at)}
       </time>
