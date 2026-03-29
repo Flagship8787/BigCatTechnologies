@@ -1,48 +1,19 @@
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import '../App.css'
 import './PostDetail.css'
-
-const API_URL = import.meta.env.VITE_API_URL ?? ''
-
-interface Post {
-  id: string
-  blog_id: string
-  title: string
-  body: string
-  created_at: string
-  updated_at: string
-}
-
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  })
-}
+import Nav from '../components/Nav'
+import { usePost } from '../hooks/usePost'
+import { useFormatDate } from '../hooks/useFormatDate'
 
 export default function PostDetail() {
   const { postId } = useParams<{ postId: string }>()
-  const [post, setPost] = useState<Post | null>(null)
-  const [error, setError] = useState<string | null>(null)
-  const [loading, setLoading] = useState(true)
+  const { post, error, loading, fetchPost } = usePost()
+  const { formatDate } = useFormatDate()
 
   useEffect(() => {
     if (!postId) return
-    fetch(`${API_URL}/posts/${postId}`)
-      .then((res) => {
-        if (!res.ok) throw new Error(`Server returned ${res.status}`)
-        return res.json() as Promise<Post>
-      })
-      .then((data) => {
-        setPost(data)
-        setLoading(false)
-      })
-      .catch((err: Error) => {
-        setError(err.message)
-        setLoading(false)
-      })
+    fetchPost(postId)
   }, [postId])
 
   return (
@@ -51,12 +22,7 @@ export default function PostDetail() {
         <Link to="/" className="wordmark" style={{ textDecoration: 'none' }}>
           BigCat Technologies
         </Link>
-        <nav className="nav">
-          <a href="/mcp">MCP</a>
-          <Link to="/blog">Mox's Blog</Link>
-          <a href="/about">About</a>
-          <a href="/contact">Contact</a>
-        </nav>
+        <Nav />
       </header>
 
       <main className="app-main post-detail-main">
