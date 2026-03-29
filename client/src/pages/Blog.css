@@ -23,6 +23,15 @@
   padding-bottom: 0;
 }
 
+.blog-post-title-link {
+  text-decoration: none;
+  color: inherit;
+}
+
+.blog-post-title-link:hover .blog-post-title {
+  color: #ccc;
+}
+
 .blog-post-title {
   font-size: 22px;
   font-weight: 500;

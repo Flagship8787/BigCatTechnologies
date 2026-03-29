@@ -3,6 +3,7 @@ import { useAuth0 } from '@auth0/auth0-react'
 import ProtectedRoute from './components/ProtectedRoute'
 import Dashboard from './pages/Dashboard'
 import Blog from './pages/Blog'
+import PostDetail from './pages/PostDetail'
 import './App.css'
 
 function Home() {
@@ -73,6 +74,7 @@ export default function App() {
     <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/blog" element={<Blog />} />
+      <Route path="/blog/posts/:postId" element={<PostDetail />} />
       <Route
         path="/dashboard"
         element={
