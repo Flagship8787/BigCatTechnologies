@@ -1,5 +1,6 @@
 import { useAuth0 } from '@auth0/auth0-react'
 import AdminLayout from '../layouts/AdminLayout'
+import './Dashboard.css'
 
 export default function Dashboard() {
   const { user } = useAuth0()

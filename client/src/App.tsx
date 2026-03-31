@@ -1,11 +1,11 @@
 import { Routes, Route } from 'react-router-dom'
 import ProtectedRoute from './components/ProtectedRoute'
 import Nav from './components/Nav'
-import Dashboard from './pages/Dashboard'
+import Dashboard from './admin/pages/Dashboard'
 import Blog from './pages/Blog'
 import PostDetail from './pages/PostDetail'
-import AllBlogs from './pages/admin/AllBlogs'
-import CreateBlog from './pages/admin/CreateBlog'
+import AllBlogs from './admin/pages/AllBlogs'
+import CreateBlog from './admin/pages/CreateBlog'
 import './App.css'
 
 function Home() {
