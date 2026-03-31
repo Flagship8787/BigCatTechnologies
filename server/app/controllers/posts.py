@@ -1,3 +1,5 @@
+from typing import Optional
+
 from fastapi import FastAPI, HTTPException, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -11,6 +13,12 @@ from app.models.post import Post, PostState
 class PostCreate(BaseModel):
     title: str
     body: str = ""
+
+
+class PostUpdate(BaseModel):
+    title: Optional[str] = None
+    body: Optional[str] = None
+    state: Optional[PostState] = None
 
 
 def _post_to_response(post: Post) -> dict:
@@ -33,6 +41,22 @@ def register(app: FastAPI):
         post = result.scalar_one_or_none()
         if post is None:
             raise HTTPException(status_code=404, detail="Post not found")
+        return _post_to_response(post)
+
+    @app.patch("/posts/{post_id}")
+    async def update_post(post_id: str, data: PostUpdate, db: AsyncSession = Depends(get_db)):
+        result = await db.execute(select(Post).where(Post.id == post_id))
+        post = result.scalar_one_or_none()
+        if post is None:
+            raise HTTPException(status_code=404, detail="Post not found")
+        if data.title is not None:
+            post.title = data.title
+        if data.body is not None:
+            post.body = data.body
+        if data.state is not None:
+            post.state = data.state
+        await db.commit()
+        await db.refresh(post)
         return _post_to_response(post)
 
     @app.post("/blogs/{blog_id}/posts", status_code=201)

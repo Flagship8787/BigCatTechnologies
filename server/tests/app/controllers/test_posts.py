@@ -138,6 +138,111 @@ async def test_get_post_returns_404_for_unknown_id(app: FastAPI):
 
 
 @pytest.mark.asyncio
+async def test_update_post_returns_200(app: FastAPI):
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=app), base_url="http://test"
+    ) as client:
+        blog = await client.post("/blogs", json={"name": "My Blog", "description": ""})
+        blog_id = blog.json()["id"]
+        created = await client.post(
+            f"/blogs/{blog_id}/posts",
+            json={"title": "Original Title", "body": "Original body"}
+        )
+        post_id = created.json()["id"]
+        response = await client.patch(f"/posts/{post_id}", json={"title": "Updated Title"})
+
+    assert response.status_code == 200
+
+
+@pytest.mark.asyncio
+async def test_update_post_returns_updated_data(app: FastAPI):
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=app), base_url="http://test"
+    ) as client:
+        blog = await client.post("/blogs", json={"name": "My Blog", "description": ""})
+        blog_id = blog.json()["id"]
+        created = await client.post(
+            f"/blogs/{blog_id}/posts",
+            json={"title": "Original Title", "body": "Original body"}
+        )
+        post_id = created.json()["id"]
+        response = await client.patch(
+            f"/posts/{post_id}", json={"title": "Updated Title", "body": "Updated body"}
+        )
+
+    body = response.json()
+    assert body["id"] == post_id
+    assert body["title"] == "Updated Title"
+    assert body["body"] == "Updated body"
+
+
+@pytest.mark.asyncio
+async def test_update_post_updates_title_only(app: FastAPI):
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=app), base_url="http://test"
+    ) as client:
+        blog = await client.post("/blogs", json={"name": "My Blog", "description": ""})
+        blog_id = blog.json()["id"]
+        created = await client.post(
+            f"/blogs/{blog_id}/posts",
+            json={"title": "Original Title", "body": "Unchanged body"}
+        )
+        post_id = created.json()["id"]
+        response = await client.patch(f"/posts/{post_id}", json={"title": "New Title"})
+
+    body = response.json()
+    assert body["title"] == "New Title"
+    assert body["body"] == "Unchanged body"
+
+
+@pytest.mark.asyncio
+async def test_update_post_updates_state(app: FastAPI):
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=app), base_url="http://test"
+    ) as client:
+        blog = await client.post("/blogs", json={"name": "My Blog", "description": ""})
+        blog_id = blog.json()["id"]
+        created = await client.post(
+            f"/blogs/{blog_id}/posts",
+            json={"title": "A Post", "body": "Some content"}
+        )
+        post_id = created.json()["id"]
+        response = await client.patch(f"/posts/{post_id}", json={"state": "published"})
+
+    body = response.json()
+    assert body["state"] == "published"
+
+
+@pytest.mark.asyncio
+async def test_update_post_returns_404_for_unknown_id(app: FastAPI):
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=app), base_url="http://test"
+    ) as client:
+        response = await client.patch(
+            "/posts/nonexistent-post-id", json={"title": "Doesn't matter"}
+        )
+
+    assert response.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_update_post_with_invalid_state_returns_422(app: FastAPI):
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=app), base_url="http://test"
+    ) as client:
+        blog = await client.post("/blogs", json={"name": "My Blog", "description": ""})
+        blog_id = blog.json()["id"]
+        created = await client.post(
+            f"/blogs/{blog_id}/posts",
+            json={"title": "A Post", "body": "Some content"}
+        )
+        post_id = created.json()["id"]
+        response = await client.patch(f"/posts/{post_id}", json={"state": "invalid_state"})
+
+    assert response.status_code == 422
+
+
+@pytest.mark.asyncio
 async def test_post_appears_in_blog_detail(app: FastAPI):
     async with httpx.AsyncClient(
         transport=httpx.ASGITransport(app=app), base_url="http://test"
