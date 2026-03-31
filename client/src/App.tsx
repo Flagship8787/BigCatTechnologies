@@ -5,6 +5,7 @@ import Dashboard from './admin/pages/Dashboard'
 import Blog from './pages/Blog'
 import PostDetail from './pages/PostDetail'
 import AllBlogs from './admin/pages/AllBlogs'
+import BlogDetail from './admin/pages/BlogDetail'
 import CreateBlog from './admin/pages/CreateBlog'
 import './App.css'
 
@@ -66,6 +67,14 @@ export default function App() {
         element={
           <ProtectedRoute>
             <AllBlogs />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/blogs/:id"
+        element={
+          <ProtectedRoute>
+            <BlogDetail />
           </ProtectedRoute>
         }
       />
