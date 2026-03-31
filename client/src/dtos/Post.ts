@@ -3,6 +3,7 @@ export interface Post {
   blog_id: string
   title: string
   body: string
+  state: string
   created_at: string
   updated_at: string
 }
