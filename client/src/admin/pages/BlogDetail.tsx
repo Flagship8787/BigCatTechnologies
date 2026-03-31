@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import {
   Table,
   TableBody,
@@ -19,6 +19,7 @@ import { useBlog } from '../../hooks/useBlog'
 
 export default function BlogDetail() {
   const { id } = useParams<{ id: string }>()
+  const navigate = useNavigate()
   const { blog, error, loading, fetchBlog } = useBlog()
 
   useEffect(() => {
@@ -33,7 +34,7 @@ export default function BlogDetail() {
         <>
           <Typography variant="h4" gutterBottom>{blog.name}</Typography>
           <Typography variant="h5" gutterBottom sx={{ mt: 3 }}>Posts</Typography>
-          <Button variant="contained" sx={{ mb: 2 }}>+ Create New Post</Button>
+          <Button variant="contained" sx={{ mb: 2 }} onClick={() => navigate(`/admin/blogs/${id}/posts/new`)}>+ Create New Post</Button>
           <Table>
             <TableHead>
               <TableRow>
@@ -55,7 +56,7 @@ export default function BlogDetail() {
                     <IconButton aria-label="view">
                       <VisibilityIcon />
                     </IconButton>
-                    <IconButton aria-label="edit">
+                    <IconButton aria-label="edit" onClick={() => navigate(`/admin/posts/${post.id}/edit`)}>
                       <EditIcon />
                     </IconButton>
                     <IconButton aria-label="delete">

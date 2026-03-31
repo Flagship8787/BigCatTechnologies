@@ -7,6 +7,8 @@ import PostDetail from './pages/PostDetail'
 import AllBlogs from './admin/pages/AllBlogs'
 import BlogDetail from './admin/pages/BlogDetail'
 import CreateBlog from './admin/pages/CreateBlog'
+import NewPost from './admin/pages/NewPost'
+import EditPost from './admin/pages/EditPost'
 import Mcp from './pages/Mcp'
 import About from './pages/About'
 import Contact from './pages/Contact'
@@ -93,6 +95,22 @@ export default function App() {
         element={
           <ProtectedRoute>
             <CreateBlog />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/blogs/:blogId/posts/new"
+        element={
+          <ProtectedRoute>
+            <NewPost />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/posts/:postId/edit"
+        element={
+          <ProtectedRoute>
+            <EditPost />
           </ProtectedRoute>
         }
       />
