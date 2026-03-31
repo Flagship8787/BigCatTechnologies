@@ -1,5 +1,7 @@
-import { Link } from 'react-router-dom'
+import { useEffect, useRef, useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { useAuth0 } from '@auth0/auth0-react'
+import './Nav.css'
 
 interface NavProps {
   variant?: 'public' | 'dashboard'
@@ -7,6 +9,19 @@ interface NavProps {
 
 export default function Nav({ variant = 'public' }: NavProps) {
   const { isAuthenticated, isLoading, loginWithRedirect, logout, user } = useAuth0()
+  const [dropdownOpen, setDropdownOpen] = useState(false)
+  const menuRef = useRef<HTMLDivElement>(null)
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setDropdownOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   if (variant === 'dashboard') {
     return (
@@ -22,6 +37,8 @@ export default function Nav({ variant = 'public' }: NavProps) {
     )
   }
 
+  const displayName = user?.name || user?.email
+
   return (
     <nav className="nav">
       <a href="/mcp">MCP</a>
@@ -30,15 +47,30 @@ export default function Nav({ variant = 'public' }: NavProps) {
       <a href="/contact">Contact</a>
       {!isLoading && (
         isAuthenticated ? (
-          <>
-            <a href="/dashboard">{user?.email}</a>
+          <div className="nav-user-menu" ref={menuRef}>
             <button
-              className="nav-button"
-              onClick={() => logout({ logoutParams: { returnTo: window.location.origin } })}
+              className="nav-user-menu__trigger"
+              onClick={() => setDropdownOpen(prev => !prev)}
             >
-              Log out
+              Hello {displayName}
             </button>
-          </>
+            {dropdownOpen && (
+              <div className="nav-user-menu__dropdown">
+                <button
+                  className="nav-user-menu__item"
+                  onClick={() => { setDropdownOpen(false); navigate('/dashboard') }}
+                >
+                  Admin
+                </button>
+                <button
+                  className="nav-user-menu__item"
+                  onClick={() => logout({ logoutParams: { returnTo: window.location.origin } })}
+                >
+                  Logout
+                </button>
+              </div>
+            )}
+          </div>
         ) : (
           <button className="nav-button" onClick={() => loginWithRedirect()}>
             Log in
