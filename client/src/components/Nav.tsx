@@ -41,10 +41,10 @@ export default function Nav({ variant = 'public' }: NavProps) {
 
   return (
     <nav className="nav">
-      <a href="/mcp">MCP</a>
+      <Link to="/mcp">MCP</Link>
       <Link to="/blog">Mox's Blog</Link>
-      <a href="/about">About</a>
-      <a href="/contact">Contact</a>
+      <Link to="/about">About</Link>
+      <Link to="/contact">Contact</Link>
       {!isLoading && (
         isAuthenticated ? (
           <div className="nav-user-menu" ref={menuRef}>
