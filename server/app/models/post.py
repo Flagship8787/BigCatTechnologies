@@ -1,3 +1,4 @@
+import enum
 import uuid
 from datetime import datetime, timezone
 from sqlalchemy import String, Text, DateTime, ForeignKey
@@ -9,6 +10,12 @@ def utcnow():
     return datetime.now(timezone.utc)
 
 
+class PostState(str, enum.Enum):
+    drafted = "drafted"
+    published = "published"
+    deleted = "deleted"
+
+
 class Post(Base):
     __tablename__ = "posts"
 
@@ -16,6 +23,7 @@ class Post(Base):
     blog_id: Mapped[str] = mapped_column(String(36), ForeignKey("blogs.id"), nullable=False)
     title: Mapped[str] = mapped_column(String(500), nullable=False)
     body: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    state: Mapped[str] = mapped_column(String(50), nullable=False, default=PostState.drafted.value)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow, nullable=False)
 
