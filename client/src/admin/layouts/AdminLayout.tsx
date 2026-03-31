@@ -26,7 +26,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const [blogOpen, setBlogOpen] = useState(true)
 
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh' }}>
+    <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: '#f5f5f5' }}>
       <Drawer
         variant="permanent"
         sx={{
@@ -35,6 +35,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           '& .MuiDrawer-paper': {
             width: DRAWER_WIDTH,
             boxSizing: 'border-box',
+            bgcolor: '#ffffff',
+            borderRight: '1px solid #e0e0e0',
           },
         }}
       >
@@ -73,7 +75,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         </List>
       </Drawer>
 
-      <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
+      <Box component="main" sx={{ flexGrow: 1, p: 3, bgcolor: '#f5f5f5' }}>
         {children}
       </Box>
     </Box>
