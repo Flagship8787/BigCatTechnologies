@@ -4,6 +4,8 @@ import Nav from './components/Nav'
 import Dashboard from './pages/Dashboard'
 import Blog from './pages/Blog'
 import PostDetail from './pages/PostDetail'
+import AllBlogs from './pages/admin/AllBlogs'
+import CreateBlog from './pages/admin/CreateBlog'
 import './App.css'
 
 function Home() {
@@ -56,6 +58,22 @@ export default function App() {
         element={
           <ProtectedRoute>
             <Dashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/blogs"
+        element={
+          <ProtectedRoute>
+            <AllBlogs />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/blogs/new"
+        element={
+          <ProtectedRoute>
+            <CreateBlog />
           </ProtectedRoute>
         }
       />
