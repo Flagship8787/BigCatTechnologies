@@ -5,7 +5,7 @@ from pydantic import BaseModel
 
 from app.db import get_db
 from app.models.blog import Blog
-from app.models.post import Post
+from app.models.post import Post, PostState
 
 
 class PostCreate(BaseModel):
@@ -19,6 +19,7 @@ def _post_to_response(post: Post) -> dict:
         "blog_id": post.blog_id,
         "title": post.title,
         "body": post.body,
+        "state": post.state,
         "created_at": post.created_at.isoformat(),
         "updated_at": post.updated_at.isoformat(),
     }

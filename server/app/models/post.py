@@ -1,8 +1,15 @@
+import enum
 import uuid
 from datetime import datetime, timezone
 from sqlalchemy import String, Text, DateTime, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db import Base
+
+
+class PostState(str, enum.Enum):
+    drafted = "drafted"
+    published = "published"
+    deleted = "deleted"
 
 
 def utcnow():
@@ -18,5 +25,6 @@ class Post(Base):
     body: Mapped[str] = mapped_column(Text, nullable=False, default="")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow, nullable=False)
+    state: Mapped[str] = mapped_column(String(50), nullable=False, default=PostState.drafted.value)
 
     blog: Mapped["Blog"] = relationship("Blog", back_populates="posts")
