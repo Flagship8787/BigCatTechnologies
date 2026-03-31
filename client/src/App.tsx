@@ -7,13 +7,17 @@ import PostDetail from './pages/PostDetail'
 import AllBlogs from './admin/pages/AllBlogs'
 import BlogDetail from './admin/pages/BlogDetail'
 import CreateBlog from './admin/pages/CreateBlog'
+import bigcatLogo from './assets/bigcat_logo.png'
 import './App.css'
 
 function Home() {
   return (
     <div className="app">
       <header className="app-header">
-        <span className="wordmark">BigCat Technologies</span>
+        <div className="wordmark-group">
+          <img src={bigcatLogo} alt="BigCat Technologies logo" className="wordmark-logo" />
+          <span className="wordmark">BigCat Technologies</span>
+        </div>
         <Nav />
       </header>
 

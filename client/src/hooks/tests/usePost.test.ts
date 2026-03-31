@@ -8,6 +8,7 @@ const mockPost: Post = {
   blog_id: 'blog-abc',
   title: 'Hello World',
   body: 'This is the post body.',
+  state: 'drafted',
   created_at: '2024-06-15T10:00:00.000Z',
   updated_at: '2024-06-15T12:00:00.000Z',
 }
