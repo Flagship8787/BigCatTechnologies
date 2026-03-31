@@ -7,6 +7,9 @@ import PostDetail from './pages/PostDetail'
 import AllBlogs from './admin/pages/AllBlogs'
 import BlogDetail from './admin/pages/BlogDetail'
 import CreateBlog from './admin/pages/CreateBlog'
+import Mcp from './pages/Mcp'
+import About from './pages/About'
+import Contact from './pages/Contact'
 import bigcatLogo from './assets/bigcat_logo.png'
 import './App.css'
 
@@ -56,6 +59,9 @@ export default function App() {
   return (
     <Routes>
       <Route path="/" element={<Home />} />
+      <Route path="/mcp" element={<Mcp />} />
+      <Route path="/about" element={<About />} />
+      <Route path="/contact" element={<Contact />} />
       <Route path="/blog" element={<Blog />} />
       <Route path="/blog/posts/:postId" element={<PostDetail />} />
       <Route

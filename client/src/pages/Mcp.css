@@ -1,0 +1,62 @@
+.mcp-main {
+  max-width: 820px;
+}
+
+.mcp-body {
+  border-top: 1px solid #222;
+  padding-top: 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.mcp-body h2 {
+  font-size: 22px;
+  font-weight: 600;
+  color: #fff;
+  margin: 24px 0 0;
+}
+
+.mcp-body h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #ccc;
+  margin: 16px 0 0;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.mcp-body p {
+  font-size: 16px;
+  line-height: 1.7;
+  color: #aaa;
+  margin: 0;
+}
+
+.mcp-body strong {
+  color: #ddd;
+}
+
+.mcp-body code {
+  font-family: 'Menlo', 'Monaco', 'Consolas', monospace;
+  font-size: 13px;
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 4px;
+  padding: 2px 6px;
+  color: #7dd3fc;
+}
+
+.code-block {
+  font-family: 'Menlo', 'Monaco', 'Consolas', monospace;
+  font-size: 13px;
+  background: #111;
+  border: 1px solid #2a2a2a;
+  border-radius: 8px;
+  padding: 20px 24px;
+  color: #7dd3fc;
+  overflow-x: auto;
+  margin: 0;
+  white-space: pre;
+  line-height: 1.6;
+}
