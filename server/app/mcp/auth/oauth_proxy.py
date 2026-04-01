@@ -37,6 +37,6 @@ auth = OAuthProxy(
     base_url=os.environ['API_BASE_URL'],
     redirect_path=os.environ['AUTH0_REDIRECT_PATH'],
     client_storage=cache_storage,
-    allowed_client_redirect_uris=["http://localhost"],
+    allowed_client_redirect_uris=["http://localhost", "http://127.0.0.1"],
     extra_authorize_params={"audience": os.environ['AUTH0_AUDIENCE']},
 )
