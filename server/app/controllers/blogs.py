@@ -14,6 +14,7 @@ class BlogCreate(BaseModel):
     name: str
     description: str = ""
     author_name: str
+    owner_id: str
 
 
 class BlogUpdate(BaseModel):
@@ -40,6 +41,7 @@ class BlogResponse(BaseModel):
     name: str
     description: str
     author_name: str
+    owner_id: str
     created_at: str
     updated_at: str
 
@@ -51,6 +53,7 @@ class BlogWithPostsResponse(BaseModel):
     name: str
     description: str
     author_name: str
+    owner_id: str
     created_at: str
     updated_at: str
     posts: List[PostResponse]
@@ -62,6 +65,7 @@ def _blog_to_response(blog: Blog) -> dict:
         "name": blog.name,
         "description": blog.description,
         "author_name": blog.author_name,
+        "owner_id": blog.owner_id,
         "created_at": blog.created_at.isoformat(),
         "updated_at": blog.updated_at.isoformat(),
     }
@@ -82,7 +86,7 @@ def register(app: FastAPI):
 
     @app.post("/blogs", status_code=201)
     async def create_blog(data: BlogCreate, db: AsyncSession = Depends(get_db)):
-        blog = Blog(name=data.name, description=data.description, author_name=data.author_name)
+        blog = Blog(name=data.name, description=data.description, author_name=data.author_name, owner_id=data.owner_id)
         db.add(blog)
         await db.commit()
         await db.refresh(blog)
