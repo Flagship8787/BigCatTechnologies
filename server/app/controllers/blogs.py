@@ -13,11 +13,13 @@ from app.models.post import Post
 class BlogCreate(BaseModel):
     name: str
     description: str = ""
+    author_name: str
 
 
 class BlogUpdate(BaseModel):
     name: Optional[str] = None
     description: Optional[str] = None
+    author_name: Optional[str] = None
 
 
 class PostResponse(BaseModel):
@@ -37,6 +39,7 @@ class BlogResponse(BaseModel):
     id: str
     name: str
     description: str
+    author_name: str
     created_at: str
     updated_at: str
 
@@ -47,6 +50,7 @@ class BlogWithPostsResponse(BaseModel):
     id: str
     name: str
     description: str
+    author_name: str
     created_at: str
     updated_at: str
     posts: List[PostResponse]
@@ -57,6 +61,7 @@ def _blog_to_response(blog: Blog) -> dict:
         "id": blog.id,
         "name": blog.name,
         "description": blog.description,
+        "author_name": blog.author_name,
         "created_at": blog.created_at.isoformat(),
         "updated_at": blog.updated_at.isoformat(),
     }
@@ -77,7 +82,7 @@ def register(app: FastAPI):
 
     @app.post("/blogs", status_code=201)
     async def create_blog(data: BlogCreate, db: AsyncSession = Depends(get_db)):
-        blog = Blog(name=data.name, description=data.description)
+        blog = Blog(name=data.name, description=data.description, author_name=data.author_name)
         db.add(blog)
         await db.commit()
         await db.refresh(blog)
@@ -99,6 +104,8 @@ def register(app: FastAPI):
             blog.name = data.name
         if data.description is not None:
             blog.description = data.description
+        if data.author_name is not None:
+            blog.author_name = data.author_name
         await db.commit()
         await db.refresh(blog)
         return _blog_to_response(blog)
