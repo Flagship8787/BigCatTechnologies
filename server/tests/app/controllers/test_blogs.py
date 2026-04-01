@@ -1,71 +1,44 @@
 import pytest
 import httpx
 from fastapi import FastAPI
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
-from sqlalchemy.orm import DeclarativeBase
 
-from app.controllers.blogs import register
-from app.db import get_db, Base
-
-
-# In-memory SQLite for tests
-TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
-
-BLOG_PAYLOAD = {
-    "name": "My Blog",
-    "description": "A test blog",
-    "author_name": "Test Author",
-    "owner_id": "auth0|test-owner-id",
-}
-
-
-@pytest.fixture
-async def db_session():
-    engine = create_async_engine(TEST_DATABASE_URL, echo=False)
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-    session_factory = async_sessionmaker(bind=engine, class_=AsyncSession, expire_on_commit=False)
-    async with session_factory() as session:
-        yield session
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
-    await engine.dispose()
-
-
-@pytest.fixture
-def app(db_session: AsyncSession) -> FastAPI:
-    test_app = FastAPI()
-    register(test_app)
-
-    async def override_get_db():
-        yield db_session
-
-    test_app.dependency_overrides[get_db] = override_get_db
-    return test_app
+from tests.factories import BlogFactory
 
 
 @pytest.mark.asyncio
 async def test_create_blog_returns_201(app: FastAPI):
+    payload = BlogFactory.stub().__dict__
     async with httpx.AsyncClient(
         transport=httpx.ASGITransport(app=app), base_url="http://test"
     ) as client:
-        response = await client.post("/blogs", json=BLOG_PAYLOAD)
+        response = await client.post("/blogs", json={
+            "name": payload["name"],
+            "description": payload["description"],
+            "author_name": payload["author_name"],
+            "owner_id": payload["owner_id"],
+        })
 
     assert response.status_code == 201
 
 
 @pytest.mark.asyncio
 async def test_create_blog_returns_blog_data(app: FastAPI):
+    blog_data = BlogFactory.stub().__dict__
     async with httpx.AsyncClient(
         transport=httpx.ASGITransport(app=app), base_url="http://test"
     ) as client:
-        response = await client.post("/blogs", json=BLOG_PAYLOAD)
+        response = await client.post("/blogs", json={
+            "name": blog_data["name"],
+            "description": blog_data["description"],
+            "author_name": blog_data["author_name"],
+            "owner_id": blog_data["owner_id"],
+        })
 
     body = response.json()
-    assert body["name"] == "My Blog"
-    assert body["description"] == "A test blog"
-    assert body["author_name"] == "Test Author"
-    assert body["owner_id"] == "auth0|test-owner-id"
+    assert body["name"] == blog_data["name"]
+    assert body["description"] == blog_data["description"]
+    assert body["author_name"] == blog_data["author_name"]
+    assert body["owner_id"] == blog_data["owner_id"]
     assert "id" in body
     assert "created_at" in body
     assert "updated_at" in body
@@ -83,26 +56,39 @@ async def test_list_blogs_returns_200(app: FastAPI):
 
 @pytest.mark.asyncio
 async def test_list_blogs_returns_created_blogs(app: FastAPI):
+    blog_one = BlogFactory.stub().__dict__
+    blog_two = BlogFactory.stub().__dict__
+
     async with httpx.AsyncClient(
         transport=httpx.ASGITransport(app=app), base_url="http://test"
     ) as client:
-        await client.post("/blogs", json={**BLOG_PAYLOAD, "name": "Blog One"})
-        await client.post("/blogs", json={**BLOG_PAYLOAD, "name": "Blog Two"})
+        await client.post("/blogs", json={
+            "name": blog_one["name"], "description": blog_one["description"],
+            "author_name": blog_one["author_name"], "owner_id": blog_one["owner_id"],
+        })
+        await client.post("/blogs", json={
+            "name": blog_two["name"], "description": blog_two["description"],
+            "author_name": blog_two["author_name"], "owner_id": blog_two["owner_id"],
+        })
         response = await client.get("/blogs")
 
     body = response.json()
     assert len(body) == 2
     names = [b["name"] for b in body]
-    assert "Blog One" in names
-    assert "Blog Two" in names
+    assert blog_one["name"] in names
+    assert blog_two["name"] in names
 
 
 @pytest.mark.asyncio
 async def test_get_blog_returns_200(app: FastAPI):
+    blog_data = BlogFactory.stub().__dict__
     async with httpx.AsyncClient(
         transport=httpx.ASGITransport(app=app), base_url="http://test"
     ) as client:
-        created = await client.post("/blogs", json=BLOG_PAYLOAD)
+        created = await client.post("/blogs", json={
+            "name": blog_data["name"], "description": blog_data["description"],
+            "author_name": blog_data["author_name"], "owner_id": blog_data["owner_id"],
+        })
         blog_id = created.json()["id"]
         response = await client.get(f"/blogs/{blog_id}")
 
@@ -111,10 +97,14 @@ async def test_get_blog_returns_200(app: FastAPI):
 
 @pytest.mark.asyncio
 async def test_get_blog_returns_blog_with_posts(app: FastAPI):
+    blog_data = BlogFactory.stub().__dict__
     async with httpx.AsyncClient(
         transport=httpx.ASGITransport(app=app), base_url="http://test"
     ) as client:
-        created = await client.post("/blogs", json=BLOG_PAYLOAD)
+        created = await client.post("/blogs", json={
+            "name": blog_data["name"], "description": blog_data["description"],
+            "author_name": blog_data["author_name"], "owner_id": blog_data["owner_id"],
+        })
         blog_id = created.json()["id"]
         response = await client.get(f"/blogs/{blog_id}")
 
@@ -136,10 +126,14 @@ async def test_get_blog_returns_404_for_unknown_id(app: FastAPI):
 
 @pytest.mark.asyncio
 async def test_update_blog_returns_200(app: FastAPI):
+    blog_data = BlogFactory.stub().__dict__
     async with httpx.AsyncClient(
         transport=httpx.ASGITransport(app=app), base_url="http://test"
     ) as client:
-        created = await client.post("/blogs", json={**BLOG_PAYLOAD, "name": "Old Name"})
+        created = await client.post("/blogs", json={
+            "name": blog_data["name"], "description": blog_data["description"],
+            "author_name": blog_data["author_name"], "owner_id": blog_data["owner_id"],
+        })
         blog_id = created.json()["id"]
         response = await client.patch(f"/blogs/{blog_id}", json={"name": "New Name"})
 
@@ -148,10 +142,14 @@ async def test_update_blog_returns_200(app: FastAPI):
 
 @pytest.mark.asyncio
 async def test_update_blog_changes_name(app: FastAPI):
+    blog_data = BlogFactory.stub().__dict__
     async with httpx.AsyncClient(
         transport=httpx.ASGITransport(app=app), base_url="http://test"
     ) as client:
-        created = await client.post("/blogs", json={**BLOG_PAYLOAD, "name": "Old Name"})
+        created = await client.post("/blogs", json={
+            "name": blog_data["name"], "description": blog_data["description"],
+            "author_name": blog_data["author_name"], "owner_id": blog_data["owner_id"],
+        })
         blog_id = created.json()["id"]
         response = await client.patch(f"/blogs/{blog_id}", json={"name": "New Name"})
 
