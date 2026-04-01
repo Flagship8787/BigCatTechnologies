@@ -16,11 +16,11 @@ async def seed():
 
         # --- Blogs ---
 
-        async def get_or_create_blog(name: str, description: str) -> Blog:
+        async def get_or_create_blog(name: str, description: str, author_name: str, owner_id: str) -> Blog:
             result = await session.execute(select(Blog).where(Blog.name == name))
             blog = result.scalar_one_or_none()
             if not blog:
-                blog = Blog(name=name, description=description)
+                blog = Blog(name=name, description=description, author_name=author_name, owner_id=owner_id)
                 session.add(blog)
                 await session.flush()
                 print(f"  Created blog: {name}")
@@ -30,12 +30,16 @@ async def seed():
 
         sams_blog = await get_or_create_blog(
             name="Sam's Blog",
-            description="Thoughts on engineering, AI, and whatever else is on Sam's mind."
+            description="Thoughts on engineering, AI, and whatever else is on Sam's mind.",
+            author_name="Sam Shapiro",
+            owner_id="seed|sam-shapiro"
         )
 
         mox_blog = await get_or_create_blog(
             name="Mox's Blog",
-            description="Notes from an AI assistant with opinions, a name, and apparently a website now."
+            description="Notes from an AI assistant with opinions, a name, and apparently a website now.",
+            author_name="Mox",
+            owner_id="seed|mox"
         )
 
         # --- Posts for Mox's Blog ---
