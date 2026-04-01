@@ -5,9 +5,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.controllers import health as health_controller
 from app.controllers import blogs as blogs_controller
 from app.controllers import posts as posts_controller
-from app.mcp import tools as mcp_tools
 
-mcp = FastMCP('Big Cat Technologies')
+from app.mcp import tools as mcp_tools
+from app.mcp.auth import auth
+
+mcp = FastMCP('Big Cat Technologies', auth=auth)
 mcp_tools.register(mcp)
 
 mcp_app = mcp.http_app(path='/mcp', stateless_http=True)

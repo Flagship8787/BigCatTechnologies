@@ -10,11 +10,12 @@ load_dotenv()
 redis_args = {
     'host': os.environ['REDIS_HOST'],
     'port': os.environ['REDIS_PORT'],
+    'password': os.environ['REDIS_PASSWORD'],
     'ssl': False,
     'decode_responses': True
 }
 
-if os.environ['REDIS_USE_SSL'].lower() == 'true'
+if os.environ['REDIS_USE_SSL'].lower() == 'true':
     redis_args['ssl']=True
     redis_args['redis_cert_reqs']='required'
 

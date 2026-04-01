@@ -19,3 +19,73 @@ variable "db_password" {
   type        = string
   sensitive   = true
 }
+
+variable "redis_host" {
+  description = "Redis host for OAuthProxy cache storage"
+  type        = string
+}
+
+variable "redis_password" {
+  description = "Password for the Redis instance"
+  type        = string
+  sensitive   = true
+}
+
+variable "redis_port" {
+  description = "Redis port"
+  type        = string
+  default     = "6379"
+}
+
+variable "redis_use_ssl" {
+  description = "Whether Redis connection uses SSL"
+  type        = string
+  default     = "false"
+}
+
+variable "auth0_jwks_uri" {
+  description = "Auth0 JWKS URI for JWT verification"
+  type        = string
+}
+
+variable "auth0_issuer" {
+  description = "Auth0 issuer URL"
+  type        = string
+}
+
+variable "auth0_audience" {
+  description = "Auth0 audience"
+  type        = string
+}
+
+variable "auth0_auth_endpoint" {
+  description = "Auth0 authorization endpoint"
+  type        = string
+}
+
+variable "auth0_token_endpoint" {
+  description = "Auth0 token endpoint"
+  type        = string
+}
+
+variable "auth0_client_id" {
+  description = "Auth0 client ID"
+  type        = string
+}
+
+variable "auth0_client_secret" {
+  description = "Auth0 client secret"
+  type        = string
+  sensitive   = true
+}
+
+variable "api_base_url" {
+  description = "Public base URL of the API (used for OAuth redirect)"
+  type        = string
+}
+
+variable "auth0_redirect_path" {
+  description = "OAuth redirect path (e.g. /oauth/callback)"
+  type        = string
+  default     = "/oauth/callback"
+}

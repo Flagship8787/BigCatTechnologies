@@ -233,6 +233,72 @@ resource "google_cloud_run_v2_service" "server" {
         }
       }
 
+      # Redis (OAuthProxy cache)
+      env {
+        name  = "REDIS_HOST"
+        value = var.redis_host
+      }
+      env {
+        name  = "REDIS_PORT"
+        value = var.redis_port
+      }
+      env {
+        name  = "REDIS_USE_SSL"
+        value = var.redis_use_ssl
+      }
+      env {
+        name = "REDIS_PASSWORD"
+        value_source {
+          secret_key_ref {
+            secret  = google_secret_manager_secret.redis_password.secret_id
+            version = "latest"
+          }
+        }
+      }
+
+      # Auth0 (non-secret)
+      env {
+        name  = "AUTH0_JWKS_URI"
+        value = var.auth0_jwks_uri
+      }
+      env {
+        name  = "AUTH0_ISSUER"
+        value = var.auth0_issuer
+      }
+      env {
+        name  = "AUTH0_AUDIENCE"
+        value = var.auth0_audience
+      }
+      env {
+        name  = "AUTH0_AUTH_ENDPOINT"
+        value = var.auth0_auth_endpoint
+      }
+      env {
+        name  = "AUTH0_TOKEN_ENDPOINT"
+        value = var.auth0_token_endpoint
+      }
+      env {
+        name  = "AUTH0_CLIENT_ID"
+        value = var.auth0_client_id
+      }
+      env {
+        name = "AUTH0_CLIENT_SECRET"
+        value_source {
+          secret_key_ref {
+            secret  = google_secret_manager_secret.auth0_client_secret.secret_id
+            version = "latest"
+          }
+        }
+      }
+      env {
+        name  = "API_BASE_URL"
+        value = var.api_base_url
+      }
+      env {
+        name  = "AUTH0_REDIRECT_PATH"
+        value = var.auth0_redirect_path
+      }
+
       volume_mounts {
         name       = "cloudsql"
         mount_path = "/cloudsql"
@@ -346,6 +412,48 @@ resource "google_secret_manager_secret_version" "db_password" {
 # Grant Cloud Run server SA access to the secret
 resource "google_secret_manager_secret_iam_member" "cloud_run_server_db_password" {
   secret_id = google_secret_manager_secret.db_password.id
+  role      = "roles/secretmanager.secretAccessor"
+  member    = "serviceAccount:${google_service_account.cloud_run_server.email}"
+}
+
+# Store Auth0 client secret in Secret Manager
+resource "google_secret_manager_secret" "auth0_client_secret" {
+  secret_id  = "bigcat-auth0-client-secret"
+  depends_on = [google_project_service.secretmanager]
+
+  replication {
+    auto {}
+  }
+}
+
+resource "google_secret_manager_secret_version" "auth0_client_secret" {
+  secret      = google_secret_manager_secret.auth0_client_secret.id
+  secret_data = var.auth0_client_secret
+}
+
+resource "google_secret_manager_secret_iam_member" "cloud_run_server_auth0_client_secret" {
+  secret_id = google_secret_manager_secret.auth0_client_secret.id
+  role      = "roles/secretmanager.secretAccessor"
+  member    = "serviceAccount:${google_service_account.cloud_run_server.email}"
+}
+
+# Store Redis password in Secret Manager
+resource "google_secret_manager_secret" "redis_password" {
+  secret_id  = "bigcat-redis-password"
+  depends_on = [google_project_service.secretmanager]
+
+  replication {
+    auto {}
+  }
+}
+
+resource "google_secret_manager_secret_version" "redis_password" {
+  secret      = google_secret_manager_secret.redis_password.id
+  secret_data = var.redis_password
+}
+
+resource "google_secret_manager_secret_iam_member" "cloud_run_server_redis_password" {
+  secret_id = google_secret_manager_secret.redis_password.id
   role      = "roles/secretmanager.secretAccessor"
   member    = "serviceAccount:${google_service_account.cloud_run_server.email}"
 }
