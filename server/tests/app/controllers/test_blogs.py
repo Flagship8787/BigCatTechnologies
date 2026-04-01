@@ -11,6 +11,13 @@ from app.db import get_db, Base
 # In-memory SQLite for tests
 TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
 
+BLOG_PAYLOAD = {
+    "name": "My Blog",
+    "description": "A test blog",
+    "author_name": "Test Author",
+    "owner_id": "auth0|test-owner-id",
+}
+
 
 @pytest.fixture
 async def db_session():
@@ -42,7 +49,7 @@ async def test_create_blog_returns_201(app: FastAPI):
     async with httpx.AsyncClient(
         transport=httpx.ASGITransport(app=app), base_url="http://test"
     ) as client:
-        response = await client.post("/blogs", json={"name": "My Blog", "description": "A test blog"})
+        response = await client.post("/blogs", json=BLOG_PAYLOAD)
 
     assert response.status_code == 201
 
@@ -52,11 +59,13 @@ async def test_create_blog_returns_blog_data(app: FastAPI):
     async with httpx.AsyncClient(
         transport=httpx.ASGITransport(app=app), base_url="http://test"
     ) as client:
-        response = await client.post("/blogs", json={"name": "My Blog", "description": "A test blog"})
+        response = await client.post("/blogs", json=BLOG_PAYLOAD)
 
     body = response.json()
     assert body["name"] == "My Blog"
     assert body["description"] == "A test blog"
+    assert body["author_name"] == "Test Author"
+    assert body["owner_id"] == "auth0|test-owner-id"
     assert "id" in body
     assert "created_at" in body
     assert "updated_at" in body
@@ -77,8 +86,8 @@ async def test_list_blogs_returns_created_blogs(app: FastAPI):
     async with httpx.AsyncClient(
         transport=httpx.ASGITransport(app=app), base_url="http://test"
     ) as client:
-        await client.post("/blogs", json={"name": "Blog One", "description": ""})
-        await client.post("/blogs", json={"name": "Blog Two", "description": ""})
+        await client.post("/blogs", json={**BLOG_PAYLOAD, "name": "Blog One"})
+        await client.post("/blogs", json={**BLOG_PAYLOAD, "name": "Blog Two"})
         response = await client.get("/blogs")
 
     body = response.json()
@@ -93,7 +102,7 @@ async def test_get_blog_returns_200(app: FastAPI):
     async with httpx.AsyncClient(
         transport=httpx.ASGITransport(app=app), base_url="http://test"
     ) as client:
-        created = await client.post("/blogs", json={"name": "My Blog", "description": ""})
+        created = await client.post("/blogs", json=BLOG_PAYLOAD)
         blog_id = created.json()["id"]
         response = await client.get(f"/blogs/{blog_id}")
 
@@ -105,7 +114,7 @@ async def test_get_blog_returns_blog_with_posts(app: FastAPI):
     async with httpx.AsyncClient(
         transport=httpx.ASGITransport(app=app), base_url="http://test"
     ) as client:
-        created = await client.post("/blogs", json={"name": "My Blog", "description": ""})
+        created = await client.post("/blogs", json=BLOG_PAYLOAD)
         blog_id = created.json()["id"]
         response = await client.get(f"/blogs/{blog_id}")
 
@@ -130,7 +139,7 @@ async def test_update_blog_returns_200(app: FastAPI):
     async with httpx.AsyncClient(
         transport=httpx.ASGITransport(app=app), base_url="http://test"
     ) as client:
-        created = await client.post("/blogs", json={"name": "Old Name", "description": ""})
+        created = await client.post("/blogs", json={**BLOG_PAYLOAD, "name": "Old Name"})
         blog_id = created.json()["id"]
         response = await client.patch(f"/blogs/{blog_id}", json={"name": "New Name"})
 
@@ -142,7 +151,7 @@ async def test_update_blog_changes_name(app: FastAPI):
     async with httpx.AsyncClient(
         transport=httpx.ASGITransport(app=app), base_url="http://test"
     ) as client:
-        created = await client.post("/blogs", json={"name": "Old Name", "description": ""})
+        created = await client.post("/blogs", json={**BLOG_PAYLOAD, "name": "Old Name"})
         blog_id = created.json()["id"]
         response = await client.patch(f"/blogs/{blog_id}", json={"name": "New Name"})
 

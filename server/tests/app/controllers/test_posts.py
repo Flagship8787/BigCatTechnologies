@@ -11,6 +11,13 @@ from app.db import get_db, Base
 # In-memory SQLite for tests
 TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
 
+BLOG_PAYLOAD = {
+    "name": "My Blog",
+    "description": "",
+    "author_name": "Test Author",
+    "owner_id": "auth0|test-owner-id",
+}
+
 
 @pytest.fixture
 async def db_session():
@@ -43,7 +50,7 @@ async def test_create_post_returns_201(app: FastAPI):
     async with httpx.AsyncClient(
         transport=httpx.ASGITransport(app=app), base_url="http://test"
     ) as client:
-        blog = await client.post("/blogs", json={"name": "My Blog", "description": ""})
+        blog = await client.post("/blogs", json=BLOG_PAYLOAD)
         blog_id = blog.json()["id"]
         response = await client.post(
             f"/blogs/{blog_id}/posts",
@@ -58,7 +65,7 @@ async def test_create_post_returns_post_data(app: FastAPI):
     async with httpx.AsyncClient(
         transport=httpx.ASGITransport(app=app), base_url="http://test"
     ) as client:
-        blog = await client.post("/blogs", json={"name": "My Blog", "description": ""})
+        blog = await client.post("/blogs", json=BLOG_PAYLOAD)
         blog_id = blog.json()["id"]
         response = await client.post(
             f"/blogs/{blog_id}/posts",
@@ -92,7 +99,7 @@ async def test_get_post_returns_200(app: FastAPI):
     async with httpx.AsyncClient(
         transport=httpx.ASGITransport(app=app), base_url="http://test"
     ) as client:
-        blog = await client.post("/blogs", json={"name": "My Blog", "description": ""})
+        blog = await client.post("/blogs", json=BLOG_PAYLOAD)
         blog_id = blog.json()["id"]
         created = await client.post(
             f"/blogs/{blog_id}/posts",
@@ -109,7 +116,7 @@ async def test_get_post_returns_post_data(app: FastAPI):
     async with httpx.AsyncClient(
         transport=httpx.ASGITransport(app=app), base_url="http://test"
     ) as client:
-        blog = await client.post("/blogs", json={"name": "My Blog", "description": ""})
+        blog = await client.post("/blogs", json=BLOG_PAYLOAD)
         blog_id = blog.json()["id"]
         created = await client.post(
             f"/blogs/{blog_id}/posts",
@@ -142,7 +149,7 @@ async def test_post_appears_in_blog_detail(app: FastAPI):
     async with httpx.AsyncClient(
         transport=httpx.ASGITransport(app=app), base_url="http://test"
     ) as client:
-        blog = await client.post("/blogs", json={"name": "My Blog", "description": ""})
+        blog = await client.post("/blogs", json=BLOG_PAYLOAD)
         blog_id = blog.json()["id"]
         await client.post(
             f"/blogs/{blog_id}/posts",
