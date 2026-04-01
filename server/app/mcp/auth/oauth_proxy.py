@@ -16,7 +16,7 @@ redis_args = {
 
 if os.environ['REDIS_USE_SSL'].lower() == 'true'
     redis_args['ssl']=True
-    redis_args['redis_cert_reqs']='required'
+    redis_args['ssl_cert_reqs']='required'
 
 redis_client = Redis(**redis_args)
 cache_storage = RedisStore(client=redis_client)
