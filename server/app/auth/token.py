@@ -11,13 +11,3 @@ class TokenData(BaseModel):
     exp: Optional[int] = None
     iat: Optional[int] = None
 
-
-def deserialize_token(payload: dict) -> TokenData:
-    return TokenData(
-        sub=payload["sub"],
-        scope=payload.get("scope", ""),
-        iss=payload.get("iss"),
-        aud=payload.get("aud"),
-        exp=payload.get("exp"),
-        iat=payload.get("iat"),
-    )

@@ -1,3 +1,5 @@
+from abc import ABC, abstractmethod
+
 from fastapi import HTTPException
 from sqlalchemy import Select
 
@@ -9,7 +11,7 @@ class NotAuthorized(HTTPException):
         super().__init__(status_code=403, detail=detail)
 
 
-class BasePolicy:
+class BasePolicy(ABC):
     def __init__(self, token: TokenData):
         self.scopes = token.scope.split()
         self.user_id = token.sub
@@ -17,11 +19,5 @@ class BasePolicy:
     def has_scope(self, *scopes: str) -> bool:
         return any(s in self.scopes for s in scopes)
 
-    def scope(self, action: str) -> Select:
-        """Return a base query scoped to what this user can access for the given action.
-
-        Subclasses must implement this. Raises NotAuthorized if the user cannot
-        perform the action at all; otherwise returns a Select that callers can
-        chain additional .where() / .options() clauses onto before execution.
-        """
-        raise NotImplementedError
+    @abstractmethod
+    def scope(self, action: str) -> Select: ...
