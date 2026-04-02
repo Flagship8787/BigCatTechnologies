@@ -29,6 +29,11 @@ class ValidatorBlankFieldSpec:
         assert v.validate() is True
         assert v.errors == {}
 
+    def test_valid_attribute_is_true_on_success(self):
+        v = self.validator_class(**self.valid_kwargs)
+        v.validate()
+        assert v.valid is True
+
     def test_errors_are_empty_on_success(self):
         v = self.validator_class(**self.valid_kwargs)
         v.validate()

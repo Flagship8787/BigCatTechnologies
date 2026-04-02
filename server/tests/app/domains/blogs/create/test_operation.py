@@ -1,6 +1,7 @@
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.models.blog import Blog
 from app.domains.blogs.create.operation import Operation
 from tests.app.domains.common.shared_specs import OperationValidationGatingSpec
 from tests.factories.blog import BlogFactory
@@ -12,7 +13,7 @@ class TestOperation(OperationValidationGatingSpec):
     invalid_fields = ["name", "author_name"]
 
     @pytest.mark.asyncio
-    async def test_do_perform_creates_blog(self, db_session: AsyncSession):
+    async def test_do_perform_returns_blog_instance(self, db_session: AsyncSession):
         data = BlogFactory.build().__dict__
 
         result = await Operation()._do_perform(
@@ -23,18 +24,15 @@ class TestOperation(OperationValidationGatingSpec):
             description=data["description"],
         )
 
-        assert result["name"] == data["name"]
-        assert result["author_name"] == data["author_name"]
-        assert result["owner_id"] == data["owner_id"]
-        assert result["description"] == data["description"]
-        assert "id" in result
-        assert "created_at" in result
-        assert "updated_at" in result
+        assert isinstance(result, Blog)
+        assert result.name == data["name"]
+        assert result.author_name == data["author_name"]
+        assert result.owner_id == data["owner_id"]
+        assert result.description == data["description"]
 
     @pytest.mark.asyncio
     async def test_do_perform_persists_to_db(self, db_session: AsyncSession):
         from sqlalchemy import select
-        from app.models.blog import Blog
 
         data = BlogFactory.build().__dict__
 
@@ -45,7 +43,7 @@ class TestOperation(OperationValidationGatingSpec):
             owner_id=data["owner_id"],
         )
 
-        db_result = await db_session.execute(select(Blog).where(Blog.id == result["id"]))
+        db_result = await db_session.execute(select(Blog).where(Blog.id == result.id))
         blog = db_result.scalar_one_or_none()
         assert blog is not None
         assert blog.name == data["name"]
