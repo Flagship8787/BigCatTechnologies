@@ -65,14 +65,3 @@ class TestOperation(OperationValidationGatingSpec):
         )
 
         assert result.description == "New description"
-
-    @pytest.mark.asyncio
-    async def test_do_perform_returns_none_for_unknown_blog(self, db_session: AsyncSession):
-        result = await Operation()._do_perform(
-            db_session,
-            blog_id="nonexistent-id",
-            name="New Name",
-            author_name="Author",
-        )
-
-        assert result is None

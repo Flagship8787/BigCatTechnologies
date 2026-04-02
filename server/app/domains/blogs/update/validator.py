@@ -1,4 +1,8 @@
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.domains.common.operation.base_validator import BaseValidator
+from app.models.blog import Blog
 
 
 class Validator(BaseValidator):
@@ -11,9 +15,13 @@ class Validator(BaseValidator):
         self.author_name = author_name
         self.description = description
 
-    def validate(self) -> bool:
+    async def validate(self, db: AsyncSession) -> bool:
         if not self.blog_id or not self.blog_id.strip():
             self._add_error("blog_id", "must not be blank")
+        else:
+            result = await db.execute(select(Blog).where(Blog.id == self.blog_id))
+            if result.scalar_one_or_none() is None:
+                self._add_error("blog_id", f"blog '{self.blog_id}' not found")
 
         if not self.name or not self.name.strip():
             self._add_error("name", "must not be blank")

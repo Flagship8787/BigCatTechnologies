@@ -5,6 +5,7 @@ Subclasses must implement the required class-level attributes documented on each
 """
 import pytest
 from unittest.mock import AsyncMock
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domains.common.operation.errors import ValidationError
 
@@ -24,19 +25,22 @@ class ValidatorBlankFieldSpec:
     validator_class = None
     valid_kwargs: dict = {}
 
-    def test_valid_with_all_fields(self):
+    @pytest.mark.asyncio
+    async def test_valid_with_all_fields(self, db_session: AsyncSession):
         v = self.validator_class(**self.valid_kwargs)
-        assert v.validate() is True
+        assert await v.validate(db_session) is True
         assert v.errors == {}
 
-    def test_valid_attribute_is_true_on_success(self):
+    @pytest.mark.asyncio
+    async def test_valid_attribute_is_true_on_success(self, db_session: AsyncSession):
         v = self.validator_class(**self.valid_kwargs)
-        v.validate()
+        await v.validate(db_session)
         assert v.valid is True
 
-    def test_errors_are_empty_on_success(self):
+    @pytest.mark.asyncio
+    async def test_errors_are_empty_on_success(self, db_session: AsyncSession):
         v = self.validator_class(**self.valid_kwargs)
-        v.validate()
+        await v.validate(db_session)
         assert v.errors == {}
 
 

@@ -13,14 +13,11 @@ class Operation(BaseOperation):
     def _validator(self, post_id: str, state: str) -> BaseValidator:
         return Validator(post_id=post_id, state=state)
 
-    async def _do_perform(self, db: AsyncSession, post_id: str, state: str) -> Post | None:
+    async def _do_perform(self, db: AsyncSession, post_id: str, state: str) -> Post:
         result = await db.execute(select(Post).where(Post.id == post_id))
-        post = result.scalar_one_or_none()
-        if post is None:
-            return None
+        post = result.scalar_one()
 
         post.state = PostState.published.value
         await db.commit()
         await db.refresh(post)
-
         return post

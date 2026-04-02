@@ -15,9 +15,7 @@ class Operation(BaseOperation):
 
     async def _do_perform(self, db: AsyncSession, blog_id: str, name: str, author_name: str, description: str = "") -> Blog:
         result = await db.execute(select(Blog).where(Blog.id == blog_id))
-        blog = result.scalar_one_or_none()
-        if blog is None:
-            return None
+        blog = result.scalar_one()
 
         blog.name = name
         blog.author_name = author_name
@@ -25,5 +23,4 @@ class Operation(BaseOperation):
 
         await db.commit()
         await db.refresh(blog)
-
         return blog

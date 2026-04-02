@@ -45,19 +45,6 @@ class TestOperation(OperationValidationGatingSpec):
         assert result.state == PostState.drafted.value
 
     @pytest.mark.asyncio
-    async def test_do_perform_returns_none_for_unknown_blog(self, db_session: AsyncSession):
-        post_data = PostFactory.build().__dict__
-
-        result = await Operation()._do_perform(
-            db_session,
-            blog_id="nonexistent-blog-id",
-            title=post_data["title"],
-            body=post_data["body"],
-        )
-
-        assert result is None
-
-    @pytest.mark.asyncio
     async def test_do_perform_persists_to_db(self, db_session: AsyncSession):
         from sqlalchemy import select
 

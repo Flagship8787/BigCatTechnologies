@@ -16,18 +16,18 @@ class BaseOperation(ABC):
 
     If validation fails, `ValidationError` is raised with a `.errors` dict
     containing all validation failures before any DB work is done.
+    A single DB session is shared between validation and perform.
     """
 
     async def perform(self, *args, **kwargs) -> Any:
-        """Validate, then perform the operation.
+        """Validate, then perform the operation within a single DB session.
 
         Raises ValidationError if validation fails.
-        Opens a DB session and delegates to _do_perform if validation passes.
         """
-        validator = self._validator(*args, **kwargs)
-        if not validator.validate():
-            raise ValidationError(validator.errors)
         async with AsyncSessionLocal() as db:
+            validator = self._validator(*args, **kwargs)
+            if not await validator.validate(db):
+                raise ValidationError(validator.errors)
             return await self._do_perform(db, *args, **kwargs)
 
     @abstractmethod

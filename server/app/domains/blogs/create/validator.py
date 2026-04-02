@@ -1,3 +1,5 @@
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.domains.common.operation.base_validator import BaseValidator
 
 
@@ -11,7 +13,7 @@ class Validator(BaseValidator):
         self.owner_id = owner_id
         self.description = description
 
-    def validate(self) -> bool:
+    async def validate(self, db: AsyncSession) -> bool:
         if not self.name or not self.name.strip():
             self._add_error("name", "must not be blank")
 

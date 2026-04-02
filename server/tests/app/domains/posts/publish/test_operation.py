@@ -52,13 +52,3 @@ class TestOperation(OperationValidationGatingSpec):
         db_result = await db_session.execute(select(Post).where(Post.id == post.id))
         updated = db_result.scalar_one_or_none()
         assert updated.state == PostState.published.value
-
-    @pytest.mark.asyncio
-    async def test_do_perform_returns_none_for_unknown_post(self, db_session: AsyncSession):
-        result = await Operation()._do_perform(
-            db_session,
-            post_id="nonexistent-post-id",
-            state=PostState.drafted.value,
-        )
-
-        assert result is None
