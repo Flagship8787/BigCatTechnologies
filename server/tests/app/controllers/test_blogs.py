@@ -67,8 +67,8 @@ async def test_get_blog_only_returns_published_posts(app: FastAPI, db_session: A
     published = await create_post(db_session, blog=blog, state=PostState.published.value)
     await create_post(db_session, blog=blog, state=PostState.drafted.value)
     await create_post(db_session, blog=blog, state=PostState.deleted.value)
-    # Expire blog so the handler re-fetches with selectinload
-    await db_session.refresh(blog)
+    # Refresh the posts relationship so the handler's selectinload picks up new posts
+    await db_session.refresh(blog, attribute_names=["posts"])
 
     async with httpx.AsyncClient(
         transport=httpx.ASGITransport(app=app), base_url="http://test"
