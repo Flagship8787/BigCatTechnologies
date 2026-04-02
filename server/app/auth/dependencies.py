@@ -1,0 +1,64 @@
+import os
+from typing import Optional
+
+import httpx
+from fastapi import HTTPException, Security
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from jose import jwt, JWTError
+
+_bearer = HTTPBearer()
+
+_jwks_cache: Optional[dict] = None
+
+
+async def _get_jwks() -> dict:
+    global _jwks_cache
+    if _jwks_cache is None:
+        jwks_uri = os.environ["AUTH0_JWKS_URI"]
+        async with httpx.AsyncClient() as client:
+            response = await client.get(jwks_uri)
+            response.raise_for_status()
+            _jwks_cache = response.json()
+    return _jwks_cache
+
+
+async def require_auth0_token(
+    credentials: HTTPAuthorizationCredentials = Security(_bearer),
+) -> dict:
+    token = credentials.credentials
+    jwks = await _get_jwks()
+    issuer = os.environ["AUTH0_ISSUER"]
+    audience = os.environ["AUTH0_AUDIENCE"]
+
+    try:
+        unverified_header = jwt.get_unverified_header(token)
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Invalid token header")
+
+    rsa_key = {}
+    for key in jwks.get("keys", []):
+        if key.get("kid") == unverified_header.get("kid"):
+            rsa_key = {
+                "kty": key["kty"],
+                "kid": key["kid"],
+                "use": key["use"],
+                "n": key["n"],
+                "e": key["e"],
+            }
+            break
+
+    if not rsa_key:
+        raise HTTPException(status_code=401, detail="Unable to find appropriate key")
+
+    try:
+        payload = jwt.decode(
+            token,
+            rsa_key,
+            algorithms=["RS256"],
+            audience=audience,
+            issuer=issuer,
+        )
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
+    return payload
