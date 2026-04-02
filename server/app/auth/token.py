@@ -3,7 +3,7 @@ from typing import List, Optional, Union
 from pydantic import BaseModel
 
 
-class TokenData(BaseModel):
+class SessionToken(BaseModel):
     sub: str
     scope: str
     iss: Optional[str] = None

@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 from fastapi import HTTPException
 from sqlalchemy import Select
 
-from app.auth.token import TokenData
+from app.auth.token import SessionToken
 
 
 class NotAuthorized(HTTPException):
@@ -12,7 +12,7 @@ class NotAuthorized(HTTPException):
 
 
 class BasePolicy(ABC):
-    def __init__(self, token: TokenData):
+    def __init__(self, token: SessionToken):
         self.scopes = token.scope.split()
         self.user_id = token.sub
 

@@ -7,7 +7,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import jwt, JWTError
 
 from app.auth.deserializer import Deserializer
-from app.auth.token import TokenData
+from app.auth.token import SessionToken
 
 _bearer = HTTPBearer()
 
@@ -27,7 +27,7 @@ async def _get_jwks() -> dict:
 
 async def require_auth0_token(
     credentials: HTTPAuthorizationCredentials = Security(_bearer),
-) -> TokenData:
+) -> SessionToken:
     token = credentials.credentials
     jwks = await _get_jwks()
     issuer = os.environ["AUTH0_ISSUER"]
@@ -67,6 +67,6 @@ async def require_auth0_token(
     return Deserializer(payload).deserialize()
 
 
-def get_blog_policy(token: TokenData = Depends(require_auth0_token)):
+def get_blog_policy(token: SessionToken = Depends(require_auth0_token)):
     from app.policies.blog_policy import BlogPolicy
     return BlogPolicy(token=token)

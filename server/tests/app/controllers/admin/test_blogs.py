@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from unittest.mock import AsyncMock, patch
 
 from app.auth.dependencies import require_auth0_token
+from app.auth.token import SessionToken
 from app.db import get_db
 from app.controllers.admin.blogs import register as register_admin_blogs
 from app.models.post import PostState
@@ -19,7 +20,7 @@ def _make_admin_app(db_session: AsyncSession, scope: str) -> FastAPI:
         yield db_session
 
     async def override_require_auth0_token():
-        return {"sub": "auth0|test123", "scope": scope}
+        return SessionToken(sub="auth0|test123", scope=scope)
 
     test_app.dependency_overrides[get_db] = override_get_db
     test_app.dependency_overrides[require_auth0_token] = override_require_auth0_token

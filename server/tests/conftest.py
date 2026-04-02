@@ -3,6 +3,7 @@ from fastapi import FastAPI
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 
 from app.auth.dependencies import require_auth0_token
+from app.auth.token import SessionToken
 from app.db import get_db, Base
 from app.controllers.blogs import register as register_blogs
 from app.controllers.posts import register as register_posts
@@ -49,7 +50,7 @@ def admin_app(db_session: AsyncSession) -> FastAPI:
         yield db_session
 
     async def override_require_auth0_token():
-        return {"sub": "auth0|test123", "scope": "admin"}
+        return SessionToken(sub="auth0|test123", scope="admin")
 
     test_app.dependency_overrides[get_db] = override_get_db
     test_app.dependency_overrides[require_auth0_token] = override_require_auth0_token
