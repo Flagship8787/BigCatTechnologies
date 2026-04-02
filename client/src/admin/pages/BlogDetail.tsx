@@ -14,7 +14,7 @@ import {
 import VisibilityIcon from '@mui/icons-material/Visibility'
 import EditIcon from '@mui/icons-material/Edit'
 import DeleteIcon from '@mui/icons-material/Delete'
-import { useBlog } from '../../hooks/useBlog'
+import { useBlog } from '../../hooks/admin/useBlog'
 
 export default function BlogDetail() {
   const { id } = useParams<{ id: string }>()

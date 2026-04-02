@@ -13,7 +13,7 @@ import {
 import VisibilityIcon from '@mui/icons-material/Visibility'
 import EditIcon from '@mui/icons-material/Edit'
 import DeleteIcon from '@mui/icons-material/Delete'
-import { useBlogs } from '../../hooks/useBlogs'
+import { useBlogs } from '../../hooks/admin/useBlogs'
 
 export default function AllBlogs() {
   const { blogs, error, loading, fetchBlogs } = useBlogs()
