@@ -121,7 +121,66 @@ A FastAPI + FastMCP backend for bigcattechnologies.com — a personal hub and se
 <!-- GSD:conventions-start source:CONVENTIONS.md -->
 ## Conventions
 
-Conventions not yet established. Will populate as patterns emerge during development.
+### Domain Architecture: Operation/Validator Pattern
+
+All domain logic lives in `app/domains/<entity>/<action>/` and follows the operation/validator pattern:
+
+```
+app/domains/
+├── common/
+│   ├── operation/
+│   │   ├── base_operation.py   # BaseOperation ABC
+│   │   ├── base_validator.py   # BaseValidator ABC
+│   │   └── errors.py           # ValidationError
+│   └── serializers/
+│       └── base_serializer.py  # BaseSerializer ABC
+└── <entity>/
+    ├── <action>/
+    │   ├── operation.py        # Operation(BaseOperation)
+    │   └── validator.py        # Validator(BaseValidator)
+    └── serializer.py           # <Entity>Serializer(BaseSerializer)
+```
+
+**Validators** (`Validator(BaseValidator)`):
+- `__init__` receives all args for the operation
+- `validate(db: AsyncSession) -> bool` — async, has access to DB for existence checks
+- Use `self._add_error(field, message)` — sets `self.valid = False`, adds to `self.errors`
+- Should be **comprehensive gatekeepers**: check both field validity and record existence
+- By the time `_do_perform` runs, the world should be safe to act on
+
+**Operations** (`Operation(BaseOperation)`):
+- `_validator(*args, **kwargs) -> BaseValidator` — returns initialized validator
+- `_do_perform(db, *args, **kwargs)` — performs DB work, trusts that validation passed
+- **Do not re-guard with `if record is None`** — if you need the record to exist, the validator already checked it; use `scalar_one()` not `scalar_one_or_none()`
+- Return **model instances**, not dicts — serialization is a boundary concern
+- Return `None` only for genuinely optional lookups (not for expected-to-exist records)
+
+**Serializers** (`XSerializer(BaseSerializer)`):
+- Implement `to_json() -> dict` to serialize a model instance
+- Instantiate at the boundary (MCP tool, controller): `XSerializer(instance).to_json()`
+
+**Usage:**
+```python
+result = await SomeOperation().perform(arg1=val1, arg2=val2)
+# Returns model instance; raises ValidationError if invalid
+```
+
+### Testing Conventions
+
+- Use `factory_boy` factories for test data (`tests/factories/<entity>.py`)
+- Use `create_blog(db)` / `create_post(db)` helpers from `conftest.py` to seed records
+- Test validators separately from operations — validators are pure unit tests (no HTTP)
+- Test `_do_perform` directly with an injected `db_session` (not via `perform`)
+- Test `perform()` for validation gating behavior
+- Use shared specs (`tests/app/domains/common/shared_specs.py`) for common patterns:
+  - `ValidatorBlankFieldSpec` — pre-validate default state assertions
+  - `OperationValidationGatingSpec` — perform raises ValidationError + no DB side effects
+
+### Code Style
+
+- Abstract methods use `...` stubs, not `raise NotImplementedError`
+- No error dicts returned from operations — use exceptions (`ValidationError`)
+- Keep each class focused: validators validate, operations operate, serializers serialize
 <!-- GSD:conventions-end -->
 
 <!-- GSD:architecture-start source:ARCHITECTURE.md -->
