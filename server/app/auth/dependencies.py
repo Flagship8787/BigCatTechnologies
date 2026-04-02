@@ -70,3 +70,8 @@ async def require_auth0_token(
 def get_blog_policy(token: SessionToken = Depends(require_auth0_token)):
     from app.policies.blog_policy import BlogPolicy
     return BlogPolicy(token=token)
+
+
+def get_post_policy(token: SessionToken = Depends(require_auth0_token)):
+    from app.policies.post_policy import PostPolicy
+    return PostPolicy(token=token)

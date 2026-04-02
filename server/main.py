@@ -6,6 +6,7 @@ from app.controllers import health as health_controller
 from app.controllers import blogs as blogs_controller
 from app.controllers import posts as posts_controller
 from app.controllers.admin import blogs as admin_blogs_controller
+from app.controllers.admin import posts as admin_posts_controller
 
 from app.mcp import tools as mcp_tools
 from app.mcp.auth import auth
@@ -28,5 +29,6 @@ health_controller.register(app)
 blogs_controller.register(app)
 posts_controller.register(app)
 admin_blogs_controller.register(app)
+admin_posts_controller.register(app)
 
 app.mount('/', mcp_app)
