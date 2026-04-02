@@ -11,6 +11,21 @@ from app.models.post import PostState
 from tests.conftest import create_blog, create_post
 
 
+def _make_admin_app(db_session: AsyncSession, scope: str) -> FastAPI:
+    test_app = FastAPI()
+    register_admin_blogs(test_app)
+
+    async def override_get_db():
+        yield db_session
+
+    async def override_require_auth0_token():
+        return {"sub": "auth0|test123", "scope": scope}
+
+    test_app.dependency_overrides[get_db] = override_get_db
+    test_app.dependency_overrides[require_auth0_token] = override_require_auth0_token
+    return test_app
+
+
 @pytest.fixture
 def unauthed_admin_app(db_session: AsyncSession) -> FastAPI:
     """Admin app without auth override — used to test 401 responses."""
@@ -22,6 +37,18 @@ def unauthed_admin_app(db_session: AsyncSession) -> FastAPI:
 
     test_app.dependency_overrides[get_db] = override_get_db
     return test_app
+
+
+@pytest.fixture
+def no_scope_admin_app(db_session: AsyncSession) -> FastAPI:
+    """Admin app with a token that has no recognized scopes."""
+    return _make_admin_app(db_session, scope="")
+
+
+@pytest.fixture
+def own_scope_admin_app(db_session: AsyncSession) -> FastAPI:
+    """Admin app with blogs:admin:own scope — can read all, update only own blogs."""
+    return _make_admin_app(db_session, scope="blogs:admin:own")
 
 
 @pytest.mark.asyncio
@@ -156,3 +183,98 @@ async def test_list_blogs_returns_401_without_auth_token(unauthed_admin_app: Fas
         response = await client.get("/admin/blogs")
 
     assert response.status_code == 401
+
+
+# --- Policy tests ---
+
+
+@pytest.mark.asyncio
+async def test_list_blogs_returns_403_without_valid_scope(no_scope_admin_app: FastAPI):
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=no_scope_admin_app), base_url="http://test"
+    ) as client:
+        response = await client.get("/admin/blogs")
+
+    assert response.status_code == 403
+
+
+@pytest.mark.asyncio
+async def test_get_blog_returns_403_without_valid_scope(no_scope_admin_app: FastAPI, db_session: AsyncSession):
+    blog = await create_blog(db_session)
+
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=no_scope_admin_app), base_url="http://test"
+    ) as client:
+        response = await client.get(f"/admin/blogs/{blog.id}")
+
+    assert response.status_code == 403
+
+
+@pytest.mark.asyncio
+async def test_patch_blog_returns_403_without_valid_scope(no_scope_admin_app: FastAPI, db_session: AsyncSession):
+    blog = await create_blog(db_session, owner_id="auth0|test123")
+
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=no_scope_admin_app), base_url="http://test"
+    ) as client:
+        response = await client.patch(
+            f"/admin/blogs/{blog.id}",
+            json={"name": "New Name", "author_name": "Author"},
+        )
+
+    assert response.status_code == 403
+
+
+@pytest.mark.asyncio
+async def test_list_blogs_returns_200_with_own_scope(own_scope_admin_app: FastAPI, db_session: AsyncSession):
+    await create_blog(db_session)
+    await create_blog(db_session)
+
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=own_scope_admin_app), base_url="http://test"
+    ) as client:
+        response = await client.get("/admin/blogs")
+
+    assert response.status_code == 200
+    assert len(response.json()) == 2
+
+
+@pytest.mark.asyncio
+async def test_patch_blog_returns_200_for_own_blog_with_own_scope(
+    own_scope_admin_app: FastAPI, db_session: AsyncSession
+):
+    blog = await create_blog(db_session, owner_id="auth0|test123")
+
+    with patch("app.controllers.admin.blogs.UpdateOperation") as mock_op_class:
+        mock_instance = mock_op_class.return_value
+        mock_instance.perform = AsyncMock(return_value=blog)
+
+        async with httpx.AsyncClient(
+            transport=httpx.ASGITransport(app=own_scope_admin_app), base_url="http://test"
+        ) as client:
+            response = await client.patch(
+                f"/admin/blogs/{blog.id}",
+                json={"name": "New Name", "author_name": "Author"},
+            )
+
+    assert response.status_code == 200
+
+
+@pytest.mark.asyncio
+async def test_patch_blog_returns_404_for_unowned_blog_with_own_scope(
+    own_scope_admin_app: FastAPI, db_session: AsyncSession
+):
+    # With scoped queries, an own-scope user patching someone else's blog gets a 404
+    # (the blog is filtered out of the query) rather than a 403 — this is intentional:
+    # we don't reveal the existence of records the user can't touch.
+    blog = await create_blog(db_session, owner_id="auth0|someone-else")
+
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=own_scope_admin_app), base_url="http://test"
+    ) as client:
+        response = await client.patch(
+            f"/admin/blogs/{blog.id}",
+            json={"name": "New Name", "author_name": "Author"},
+        )
+
+    assert response.status_code == 404
