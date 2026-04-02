@@ -11,3 +11,4 @@ alembic
 aiosqlite
 pydantic
 uvicorn
+factory_boy
