@@ -1,4 +1,4 @@
-from sqlalchemy.orm import inspect as sa_inspect
+from sqlalchemy import inspect as sa_inspect
 
 from app.domains.common.serializers.base_serializer import BaseSerializer
 from app.domains.posts.serializer import PostSerializer
