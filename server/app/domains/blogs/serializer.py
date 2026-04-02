@@ -9,15 +9,16 @@ class BlogSerializer(BaseSerializer):
 
     Args:
         instance: The Blog model instance to serialize.
-        published_only: If True, only include posts with state=published.
-                        Defaults to False (include all posts).
+
+    to_json kwargs:
+        published_only (bool): If True, only include posts with state=published.
+                               Defaults to False (include all posts).
     """
 
-    def __init__(self, instance: Blog, published_only: bool = False):
+    def __init__(self, instance: Blog):
         super().__init__(instance)
-        self.published_only = published_only
 
-    def to_json(self) -> dict:
+    def to_json(self, published_only: bool = False) -> dict:
         blog = self.instance
         data = {
             "id": blog.id,
@@ -31,7 +32,7 @@ class BlogSerializer(BaseSerializer):
 
         if hasattr(blog, "posts"):
             posts = blog.posts
-            if self.published_only:
+            if published_only:
                 posts = [p for p in posts if p.state == PostState.published.value]
             data["posts"] = [PostSerializer(p).to_json() for p in posts]
 

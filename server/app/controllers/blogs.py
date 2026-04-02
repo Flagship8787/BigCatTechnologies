@@ -14,7 +14,7 @@ def register(app: FastAPI):
     async def list_blogs(db: AsyncSession = Depends(get_db)):
         result = await db.execute(select(Blog).order_by(Blog.created_at.desc()))
         blogs = result.scalars().all()
-        return [BlogSerializer(b).to_json() for b in blogs]
+        return [BlogSerializer(b).to_json(published_only=True) for b in blogs]
 
     @app.get("/blogs/{blog_id}")
     async def get_blog(blog_id: str, db: AsyncSession = Depends(get_db)):
@@ -24,4 +24,4 @@ def register(app: FastAPI):
         blog = result.scalar_one_or_none()
         if blog is None:
             raise HTTPException(status_code=404, detail="Blog not found")
-        return BlogSerializer(blog, published_only=True).to_json()
+        return BlogSerializer(blog).to_json(published_only=True)
