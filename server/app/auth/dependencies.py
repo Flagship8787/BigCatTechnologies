@@ -2,7 +2,7 @@ import os
 from typing import Optional
 
 import httpx
-from fastapi import HTTPException, Security
+from fastapi import Depends, HTTPException, Security
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import jwt, JWTError
 
@@ -62,3 +62,9 @@ async def require_auth0_token(
         raise HTTPException(status_code=401, detail="Invalid token")
 
     return payload
+
+
+def get_blog_policy(token_data: dict = Depends(require_auth0_token)):
+    from app.policies.blog_policy import BlogPolicy
+    scopes = token_data.get("scope", "").split()
+    return BlogPolicy(scopes=scopes, user_id=token_data["sub"])
