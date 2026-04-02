@@ -1,6 +1,7 @@
 import { Routes, Route } from 'react-router-dom'
 import ProtectedRoute from './components/ProtectedRoute'
 import Nav from './components/Nav'
+import AdminLayout from './admin/layouts/AdminLayout'
 import Dashboard from './admin/pages/Dashboard'
 import Blog from './pages/Blog'
 import PostDetail from './pages/PostDetail'
@@ -67,53 +68,19 @@ export default function App() {
       <Route path="/blog" element={<Blog />} />
       <Route path="/blog/posts/:postId" element={<PostDetail />} />
       <Route
-        path="/dashboard"
         element={
           <ProtectedRoute>
-            <Dashboard />
+            <AdminLayout />
           </ProtectedRoute>
         }
-      />
-      <Route
-        path="/admin/blogs"
-        element={
-          <ProtectedRoute>
-            <AllBlogs />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/blogs/:id"
-        element={
-          <ProtectedRoute>
-            <BlogDetail />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/blogs/new"
-        element={
-          <ProtectedRoute>
-            <CreateBlog />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/blogs/:blogId/posts/new"
-        element={
-          <ProtectedRoute>
-            <NewPost />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/posts/:postId/edit"
-        element={
-          <ProtectedRoute>
-            <EditPost />
-          </ProtectedRoute>
-        }
-      />
+      >
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/admin/blogs" element={<AllBlogs />} />
+        <Route path="/admin/blogs/new" element={<CreateBlog />} />
+        <Route path="/admin/blogs/:id" element={<BlogDetail />} />
+        <Route path="/admin/blogs/:blogId/posts/new" element={<NewPost />} />
+        <Route path="/admin/posts/:postId/edit" element={<EditPost />} />
+      </Route>
     </Routes>
   )
 }

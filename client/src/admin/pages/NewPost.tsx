@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { Typography } from '@mui/material'
-import AdminLayout from '../layouts/AdminLayout'
 import PostForm from '../components/PostForm'
 
 const API_URL = import.meta.env.VITE_API_URL ?? ''
@@ -30,7 +29,7 @@ export default function NewPost() {
   }
 
   return (
-    <AdminLayout>
+    <>
       <Typography variant="h4" gutterBottom>Create New Post</Typography>
       {error && <Typography color="error" sx={{ mb: 2 }}>{error}</Typography>}
       <PostForm
@@ -39,6 +38,6 @@ export default function NewPost() {
         onCancel={() => navigate(`/admin/blogs/${blogId}`)}
         loading={loading}
       />
-    </AdminLayout>
+    </>
   )
 }
