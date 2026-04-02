@@ -1,12 +1,10 @@
 from app.domains.posts.create.validator import Validator
+from tests.app.domains.common.shared_specs import ValidatorBlankFieldSpec
 
 
-class TestValidator:
-
-    def test_valid_with_all_fields(self):
-        v = Validator(blog_id="some-id", title="My Title", body="Some body")
-        assert v.validate() is True
-        assert v.errors == {}
+class TestValidator(ValidatorBlankFieldSpec):
+    validator_class = Validator
+    valid_kwargs = {"blog_id": "some-id", "title": "My Title", "body": "Some body"}
 
     def test_invalid_without_blog_id(self):
         v = Validator(blog_id="", title="My Title", body="Some body")
