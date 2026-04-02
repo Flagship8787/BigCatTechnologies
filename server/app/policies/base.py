@@ -1,14 +1,11 @@
 from abc import ABC, abstractmethod
 
-from fastapi import HTTPException
 from sqlalchemy import Select
 
 from app.auth.token import SessionToken
+from app.domains.common.errors import NotAuthorized
 
-
-class NotAuthorized(HTTPException):
-    def __init__(self, detail="Forbidden"):
-        super().__init__(status_code=403, detail=detail)
+__all__ = ["BasePolicy", "NotAuthorized"]
 
 
 class BasePolicy(ABC):
