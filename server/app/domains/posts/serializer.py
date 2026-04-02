@@ -8,7 +8,7 @@ class PostSerializer(BaseSerializer):
     def __init__(self, instance: Post):
         super().__init__(instance)
 
-    def to_json(self) -> dict:
+    def to_json(self, **kwargs) -> dict:
         post = self.instance
         return {
             "id": post.id,

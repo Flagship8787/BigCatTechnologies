@@ -13,8 +13,7 @@ class PostFactory(SQLAlchemyModelFactory):
         sqlalchemy_session_persistence = "commit"
 
     id = factory.LazyFunction(_uuid)
-    blog = factory.SubFactory(BlogFactory)
-    blog_id = factory.LazyAttribute(lambda o: o.blog.id)
+    blog_id = factory.LazyFunction(_uuid)
     title = Faker("sentence", nb_words=6)
     body = Faker("paragraph")
     state = PostState.drafted.value
