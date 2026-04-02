@@ -10,31 +10,20 @@ from app.models.blog import Blog
 class Operation(BaseOperation):
     """Updates an existing blog's mutable fields."""
 
-    def _validator(self, blog_id: str, name: str | None = None, description: str | None = None, author_name: str | None = None) -> BaseValidator:
-        return Validator(blog_id=blog_id, name=name, description=description, author_name=author_name)
+    def _validator(self, blog_id: str, name: str, author_name: str, description: str = "") -> BaseValidator:
+        return Validator(blog_id=blog_id, name=name, author_name=author_name, description=description)
 
-    async def _do_perform(self, db: AsyncSession, blog_id: str, name: str | None = None, description: str | None = None, author_name: str | None = None) -> dict:
+    async def _do_perform(self, db: AsyncSession, blog_id: str, name: str, author_name: str, description: str = "") -> Blog:
         result = await db.execute(select(Blog).where(Blog.id == blog_id))
         blog = result.scalar_one_or_none()
         if blog is None:
-            return {"error": f"Blog '{blog_id}' not found"}
+            return None
 
-        if name is not None:
-            blog.name = name
-        if description is not None:
-            blog.description = description
-        if author_name is not None:
-            blog.author_name = author_name
+        blog.name = name
+        blog.author_name = author_name
+        blog.description = description
 
         await db.commit()
         await db.refresh(blog)
 
-        return {
-            "id": blog.id,
-            "name": blog.name,
-            "description": blog.description,
-            "author_name": blog.author_name,
-            "owner_id": blog.owner_id,
-            "created_at": blog.created_at.isoformat(),
-            "updated_at": blog.updated_at.isoformat(),
-        }
+        return blog

@@ -32,16 +32,10 @@ class BaseOperation(ABC):
 
     @abstractmethod
     def _validator(self, *args, **kwargs) -> BaseValidator:
-        """Return an initialized validator for the given args.
-
-        Must be implemented by subclasses.
-        """
-        raise NotImplementedError("Subclasses must implement _validator()")
+        """Return an initialized validator for the given args."""
+        ...
 
     @abstractmethod
     async def _do_perform(self, db, *args, **kwargs) -> Any:
-        """Perform the operation logic using the provided DB session.
-
-        Must be implemented by subclasses.
-        """
-        raise NotImplementedError("Subclasses must implement _do_perform()")
+        """Perform the operation logic using the provided DB session."""
+        ...

@@ -13,20 +13,19 @@ class BaseValidator(ABC):
             # proceed
         else:
             # inspect validator.errors -> dict[str, list[str]]
+            # or check validator.valid -> False
     """
 
     def __init__(self):
+        self.valid: bool = True
         self.errors: dict[str, list[str]] = {}
 
     @abstractmethod
     def validate(self) -> bool:
-        """Run all validation checks. Returns True if valid, False otherwise.
-
-        Implementations should call `self._add_error(field, message)` for each
-        validation failure and return `len(self.errors) == 0` at the end.
-        """
+        """Run all validation checks. Returns True if valid, False otherwise."""
         raise NotImplementedError("Subclasses must implement validate()")
 
     def _add_error(self, field: str, message: str) -> None:
-        """Add a validation error for the given field."""
+        """Add a validation error for the given field and mark the validator invalid."""
+        self.valid = False
         self.errors.setdefault(field, []).append(message)
