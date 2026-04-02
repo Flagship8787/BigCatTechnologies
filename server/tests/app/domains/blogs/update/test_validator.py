@@ -18,6 +18,20 @@ class TestValidator(ValidatorBlankFieldSpec):
         assert v.errors == {}
 
     @pytest.mark.asyncio
+    async def test_valid_attribute_is_true_on_success(self, db_session: AsyncSession):
+        blog = await create_blog(db_session)
+        v = Validator(blog_id=blog.id, name="New Name", author_name="New Author")
+        await v.validate(db_session)
+        assert v.valid is True
+
+    @pytest.mark.asyncio
+    async def test_errors_are_empty_on_success(self, db_session: AsyncSession):
+        blog = await create_blog(db_session)
+        v = Validator(blog_id=blog.id, name="New Name", author_name="New Author")
+        await v.validate(db_session)
+        assert v.errors == {}
+
+    @pytest.mark.asyncio
     async def test_invalid_without_blog_id(self, db_session: AsyncSession):
         v = Validator(blog_id="", name="New Name", author_name="Author")
         assert await v.validate(db_session) is False

@@ -26,21 +26,15 @@ class ValidatorBlankFieldSpec:
     valid_kwargs: dict = {}
 
     @pytest.mark.asyncio
-    async def test_valid_with_all_fields(self, db_session: AsyncSession):
+    async def test_valid_starts_true(self, db_session: AsyncSession):
+        """valid defaults to True before validate() is called."""
         v = self.validator_class(**self.valid_kwargs)
-        assert await v.validate(db_session) is True
-        assert v.errors == {}
-
-    @pytest.mark.asyncio
-    async def test_valid_attribute_is_true_on_success(self, db_session: AsyncSession):
-        v = self.validator_class(**self.valid_kwargs)
-        await v.validate(db_session)
         assert v.valid is True
 
     @pytest.mark.asyncio
-    async def test_errors_are_empty_on_success(self, db_session: AsyncSession):
+    async def test_errors_start_empty(self, db_session: AsyncSession):
+        """errors defaults to empty dict before validate() is called."""
         v = self.validator_class(**self.valid_kwargs)
-        await v.validate(db_session)
         assert v.errors == {}
 
 

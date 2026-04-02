@@ -9,8 +9,8 @@ from tests.conftest import create_post
 
 class TestOperation(OperationValidationGatingSpec):
     operation_class = Operation
-    invalid_kwargs = {"post_id": "some-id", "state": PostState.published.value}
-    invalid_fields = ["state"]
+    invalid_kwargs = {"post_id": "", "state": PostState.drafted.value}
+    invalid_fields = ["post_id"]
 
     @pytest.mark.asyncio
     async def test_do_perform_returns_post_instance(self, db_session: AsyncSession):
