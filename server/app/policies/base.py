@@ -1,6 +1,8 @@
 from fastapi import HTTPException
 from sqlalchemy import Select
 
+from app.auth.token import TokenData
+
 
 class NotAuthorized(HTTPException):
     def __init__(self, detail="Forbidden"):
@@ -8,9 +10,9 @@ class NotAuthorized(HTTPException):
 
 
 class BasePolicy:
-    def __init__(self, scopes: list[str], user_id: str):
-        self.scopes = scopes
-        self.user_id = user_id
+    def __init__(self, token: TokenData):
+        self.scopes = token.scope.split()
+        self.user_id = token.sub
 
     def has_scope(self, *scopes: str) -> bool:
         return any(s in self.scopes for s in scopes)

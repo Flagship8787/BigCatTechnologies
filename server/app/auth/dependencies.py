@@ -6,6 +6,8 @@ from fastapi import Depends, HTTPException, Security
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import jwt, JWTError
 
+from app.auth.token import TokenData, deserialize_token
+
 _bearer = HTTPBearer()
 
 _jwks_cache: Optional[dict] = None
@@ -24,7 +26,7 @@ async def _get_jwks() -> dict:
 
 async def require_auth0_token(
     credentials: HTTPAuthorizationCredentials = Security(_bearer),
-) -> dict:
+) -> TokenData:
     token = credentials.credentials
     jwks = await _get_jwks()
     issuer = os.environ["AUTH0_ISSUER"]
@@ -61,10 +63,9 @@ async def require_auth0_token(
     except JWTError:
         raise HTTPException(status_code=401, detail="Invalid token")
 
-    return payload
+    return deserialize_token(payload)
 
 
-def get_blog_policy(token_data: dict = Depends(require_auth0_token)):
+def get_blog_policy(token: TokenData = Depends(require_auth0_token)):
     from app.policies.blog_policy import BlogPolicy
-    scopes = token_data.get("scope", "").split()
-    return BlogPolicy(scopes=scopes, user_id=token_data["sub"])
+    return BlogPolicy(token=token)
