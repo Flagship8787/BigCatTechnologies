@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { CircularProgress, Typography } from '@mui/material'
-import AdminLayout from '../layouts/AdminLayout'
 import PostForm from '../components/PostForm'
 import { usePost } from '../../hooks/usePost'
 
@@ -36,7 +35,7 @@ export default function EditPost() {
   }
 
   return (
-    <AdminLayout>
+    <>
       <Typography variant="h4" gutterBottom>Edit Post</Typography>
       {fetchLoading && <CircularProgress />}
       {fetchError && <Typography color="error">{fetchError}</Typography>}
@@ -49,6 +48,6 @@ export default function EditPost() {
           loading={submitLoading}
         />
       )}
-    </AdminLayout>
+    </>
   )
 }

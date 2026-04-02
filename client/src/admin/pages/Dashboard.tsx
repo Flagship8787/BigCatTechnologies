@@ -1,12 +1,11 @@
 import { useAuth0 } from '@auth0/auth0-react'
-import AdminLayout from '../layouts/AdminLayout'
 import './Dashboard.css'
 
 export default function Dashboard() {
   const { user } = useAuth0()
 
   return (
-    <AdminLayout>
+    <>
       <section>
         <h1>Dashboard</h1>
         <p>Welcome back, {user?.email}</p>
@@ -24,6 +23,6 @@ export default function Dashboard() {
         <p><strong>Name:</strong> {user?.name}</p>
         <p><strong>Email:</strong> {user?.email}</p>
       </section>
-    </AdminLayout>
+    </>
   )
 }

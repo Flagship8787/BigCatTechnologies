@@ -14,7 +14,6 @@ import {
 import VisibilityIcon from '@mui/icons-material/Visibility'
 import EditIcon from '@mui/icons-material/Edit'
 import DeleteIcon from '@mui/icons-material/Delete'
-import AdminLayout from '../layouts/AdminLayout'
 import { useBlog } from '../../hooks/useBlog'
 
 export default function BlogDetail() {
@@ -27,7 +26,7 @@ export default function BlogDetail() {
   }, [id])
 
   return (
-    <AdminLayout>
+    <>
       {loading && <CircularProgress />}
       {error && <Typography color="error">{error}</Typography>}
       {!loading && !error && blog && (
@@ -69,6 +68,6 @@ export default function BlogDetail() {
           </Table>
         </>
       )}
-    </AdminLayout>
+    </>
   )
 }

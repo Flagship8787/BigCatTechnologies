@@ -13,7 +13,6 @@ import {
 import VisibilityIcon from '@mui/icons-material/Visibility'
 import EditIcon from '@mui/icons-material/Edit'
 import DeleteIcon from '@mui/icons-material/Delete'
-import AdminLayout from '../layouts/AdminLayout'
 import { useBlogs } from '../../hooks/useBlogs'
 
 export default function AllBlogs() {
@@ -25,7 +24,7 @@ export default function AllBlogs() {
   }, [])
 
   return (
-    <AdminLayout>
+    <>
       <Typography variant="h4" gutterBottom>All Blogs</Typography>
       {loading && <CircularProgress />}
       {error && <Typography color="error">{error}</Typography>}
@@ -63,6 +62,6 @@ export default function AllBlogs() {
           </TableBody>
         </Table>
       )}
-    </AdminLayout>
+    </>
   )
 }
