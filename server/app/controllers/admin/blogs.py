@@ -1,7 +1,6 @@
 from fastapi import FastAPI, HTTPException, Depends
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
 from app.auth.dependencies import get_blog_policy
@@ -25,8 +24,7 @@ def register(app: FastAPI):
         db: AsyncSession = Depends(get_db),
         policy: BlogPolicy = Depends(get_blog_policy),
     ):
-        policy.authorize("read")
-        query = policy.scope(select(Blog).order_by(Blog.created_at.desc()))
+        query = policy.scope("read").order_by(Blog.created_at.desc())
         result = await db.execute(query)
         blogs = result.scalars().all()
         return [BlogSerializer(b).to_json() for b in blogs]
@@ -37,10 +35,8 @@ def register(app: FastAPI):
         db: AsyncSession = Depends(get_db),
         policy: BlogPolicy = Depends(get_blog_policy),
     ):
-        policy.authorize("read")
-        result = await db.execute(
-            select(Blog).where(Blog.id == blog_id).options(selectinload(Blog.posts))
-        )
+        query = policy.scope("read").where(Blog.id == blog_id).options(selectinload(Blog.posts))
+        result = await db.execute(query)
         blog = result.scalar_one_or_none()
         if blog is None:
             raise HTTPException(status_code=404, detail="Blog not found")
@@ -53,11 +49,11 @@ def register(app: FastAPI):
         db: AsyncSession = Depends(get_db),
         policy: BlogPolicy = Depends(get_blog_policy),
     ):
-        result = await db.execute(select(Blog).where(Blog.id == blog_id))
+        query = policy.scope("update").where(Blog.id == blog_id)
+        result = await db.execute(query)
         blog = result.scalar_one_or_none()
         if blog is None:
             raise HTTPException(status_code=404, detail="Blog not found")
-        policy.authorize("update", blog)
         updated_blog = await UpdateOperation().perform(
             blog_id=blog_id,
             name=body.name,

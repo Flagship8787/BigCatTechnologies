@@ -261,9 +261,12 @@ async def test_patch_blog_returns_200_for_own_blog_with_own_scope(
 
 
 @pytest.mark.asyncio
-async def test_patch_blog_returns_403_for_unowned_blog_with_own_scope(
+async def test_patch_blog_returns_404_for_unowned_blog_with_own_scope(
     own_scope_admin_app: FastAPI, db_session: AsyncSession
 ):
+    # With scoped queries, an own-scope user patching someone else's blog gets a 404
+    # (the blog is filtered out of the query) rather than a 403 — this is intentional:
+    # we don't reveal the existence of records the user can't touch.
     blog = await create_blog(db_session, owner_id="auth0|someone-else")
 
     async with httpx.AsyncClient(
@@ -274,4 +277,4 @@ async def test_patch_blog_returns_403_for_unowned_blog_with_own_scope(
             json={"name": "New Name", "author_name": "Author"},
         )
 
-    assert response.status_code == 403
+    assert response.status_code == 404
