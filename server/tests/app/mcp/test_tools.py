@@ -135,9 +135,10 @@ async def test_do_perform_persists_to_db(db_session: AsyncSession):
 # Operation.perform — validation gating
 # ---------------------------------------------------------------------------
 
-def test_perform_raises_validation_error_on_invalid_args():
+@pytest.mark.asyncio
+async def test_perform_raises_validation_error_on_invalid_args():
     with pytest.raises(ValidationError) as exc_info:
-        CreatePostOperation().perform(blog_id="", title="", body="valid body")
+        await CreatePostOperation().perform(blog_id="", title="", body="valid body")
 
     assert "blog_id" in exc_info.value.errors
     assert "title" in exc_info.value.errors

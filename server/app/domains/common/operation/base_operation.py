@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, Coroutine
+from typing import Any
 
 from app.db import AsyncSessionLocal
 from app.domains.common.operation.base_validator import BaseValidator
@@ -9,7 +9,7 @@ from app.domains.common.operation.errors import ValidationError
 class BaseOperation(ABC):
     """Base class for all domain operations.
 
-    Subclasses must implement `_validator(*args, **kwargs)` and `_do_perform(*args, **kwargs)`.
+    Subclasses must implement `_validator(*args, **kwargs)` and `_do_perform(db, *args, **kwargs)`.
 
     Usage:
         result = await SomeOperation().perform(arg1, arg2)
@@ -18,19 +18,15 @@ class BaseOperation(ABC):
     containing all validation failures before any DB work is done.
     """
 
-    def perform(self, *args, **kwargs) -> Coroutine[Any, Any, Any]:
-        """Validate synchronously, then return the async perform coroutine.
+    async def perform(self, *args, **kwargs) -> Any:
+        """Validate, then perform the operation.
 
-        Raises ValidationError immediately if validation fails.
-        Returns an awaitable coroutine if validation passes.
+        Raises ValidationError if validation fails.
+        Opens a DB session and delegates to _do_perform if validation passes.
         """
         validator = self._validator(*args, **kwargs)
         if not validator.validate():
             raise ValidationError(validator.errors)
-        return self._run(*args, **kwargs)
-
-    async def _run(self, *args, **kwargs) -> Any:
-        """Open a DB session and delegate to _do_perform."""
         async with AsyncSessionLocal() as db:
             return await self._do_perform(db, *args, **kwargs)
 
