@@ -1,3 +1,5 @@
+from sqlalchemy.orm import inspect as sa_inspect
+
 from app.domains.common.serializers.base_serializer import BaseSerializer
 from app.domains.posts.serializer import PostSerializer
 from app.models.blog import Blog
@@ -30,7 +32,15 @@ class BlogSerializer(BaseSerializer):
             "updated_at": blog.updated_at.isoformat(),
         }
 
-        if hasattr(blog, "posts"):
+        # Only serialize posts if the relationship has been eagerly loaded —
+        # avoid triggering a lazy load which fails in async SQLAlchemy.
+        try:
+            insp = sa_inspect(blog)
+            posts_loaded = "posts" not in insp.unloaded
+        except Exception:
+            posts_loaded = hasattr(blog, "posts")
+
+        if posts_loaded:
             posts = blog.posts
             if published_only:
                 posts = [p for p in posts if p.state == PostState.published.value]
