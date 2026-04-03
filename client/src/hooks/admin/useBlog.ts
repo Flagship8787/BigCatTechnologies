@@ -33,14 +33,5 @@ export function useBlog() {
       })
   }
 
-  async function publish(postId: string): Promise<void> {
-    const token = await getAccessTokenSilently()
-    const res = await fetch(`${API_URL}/admin/posts/${postId}/publish`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${token}` },
-    })
-    if (!res.ok) throw new Error(`Server returned ${res.status}`)
-  }
-
-  return { blog, error, loading, refreshData, publish }
+  return { blog, error, loading, refreshData }
 }

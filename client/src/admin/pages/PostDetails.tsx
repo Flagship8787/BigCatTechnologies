@@ -9,66 +9,32 @@ import {
   Divider,
   Paper,
 } from '@mui/material'
-import { useAuth0 } from '@auth0/auth0-react'
-import type { Post } from '../../dtos/Post'
-
-const API_URL = import.meta.env.VITE_API_URL ?? ''
+import { usePost } from '../../hooks/admin/usePost'
 
 export default function PostDetails() {
   const { postId } = useParams<{ postId: string }>()
   const navigate = useNavigate()
-  const { getAccessTokenSilently } = useAuth0()
+  const { post, loading, error, fetchPost, publish } = usePost()
 
-  const [post, setPost] = useState<Post | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
   const [publishing, setPublishing] = useState(false)
   const [publishError, setPublishError] = useState<string | null>(null)
 
-  async function fetchPost() {
-    setLoading(true)
-    setError(null)
-    try {
-      const token = await getAccessTokenSilently()
-      const res = await fetch(`${API_URL}/posts/${postId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      if (!res.ok) throw new Error(`Server returned ${res.status}`)
-      const data = await res.json() as Post
-      setPost(data)
-    } catch (err) {
-      setError((err as Error).message)
-    } finally {
-      setLoading(false)
-    }
-  }
+  useEffect(() => {
+    if (postId) fetchPost(postId)
+  }, [postId])
 
   async function handlePublish() {
-    if (!post) return
+    if (!postId) return
     setPublishing(true)
     setPublishError(null)
     try {
-      const token = await getAccessTokenSilently()
-      const res = await fetch(`${API_URL}/admin/posts/${postId}/publish`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}))
-        throw new Error(body.detail ?? `Server returned ${res.status}`)
-      }
-      const updated = await res.json() as Post
-      setPost(updated)
+      await publish(postId)
     } catch (err) {
       setPublishError((err as Error).message)
     } finally {
       setPublishing(false)
     }
   }
-
-  useEffect(() => {
-    if (postId) fetchPost()
-  }, [postId])
 
   return (
     <>

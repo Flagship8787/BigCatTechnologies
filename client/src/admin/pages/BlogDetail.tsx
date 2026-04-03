@@ -17,11 +17,13 @@ import EditIcon from '@mui/icons-material/Edit'
 import DeleteIcon from '@mui/icons-material/Delete'
 import PublishIcon from '@mui/icons-material/Publish'
 import { useBlog } from '../../hooks/admin/useBlog'
+import { usePost } from '../../hooks/admin/usePost'
 
 export default function BlogDetail() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { blog, error, loading, refreshData, publish } = useBlog()
+  const { blog, error, loading, refreshData } = useBlog()
+  const { publish } = usePost()
 
   useEffect(() => {
     if (id) refreshData(id)

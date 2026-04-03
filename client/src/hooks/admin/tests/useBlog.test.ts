@@ -57,11 +57,6 @@ describe('useBlog (admin)', () => {
     expect(typeof result.current.refreshData).toBe('function')
   })
 
-  it('exposes a publish function', () => {
-    const { result } = renderHook(() => useBlog())
-    expect(typeof result.current.publish).toBe('function')
-  })
-
   it('sets blog and clears loading on successful fetch', async () => {
     vi.mocked(fetch).mockResolvedValueOnce(makeFetchResponse(mockBlog))
 
@@ -162,44 +157,5 @@ describe('useBlog (admin)', () => {
     expect(result.current.error).toBeNull()
   })
 
-  describe('publish', () => {
-    it('calls POST /admin/posts/:postId/publish with auth header', async () => {
-      vi.mocked(fetch).mockResolvedValueOnce(makeFetchResponse({}, true, 200))
 
-      const { result } = renderHook(() => useBlog())
-
-      await act(async () => {
-        await result.current.publish('post-1')
-      })
-
-      expect(fetch).toHaveBeenCalledWith('/admin/posts/post-1/publish', {
-        method: 'POST',
-        headers: { Authorization: 'Bearer test-token' },
-      })
-    })
-
-    it('resolves without error on success', async () => {
-      vi.mocked(fetch).mockResolvedValueOnce(makeFetchResponse({}, true, 200))
-
-      const { result } = renderHook(() => useBlog())
-
-      await expect(
-        act(async () => {
-          await result.current.publish('post-1')
-        })
-      ).resolves.not.toThrow()
-    })
-
-    it('throws when server returns a non-OK status', async () => {
-      vi.mocked(fetch).mockResolvedValueOnce(makeFetchResponse(null, false, 422))
-
-      const { result } = renderHook(() => useBlog())
-
-      await expect(
-        act(async () => {
-          await result.current.publish('post-1')
-        })
-      ).rejects.toThrow('Server returned 422')
-    })
-  })
 })
