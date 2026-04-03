@@ -10,7 +10,7 @@ export function useBlog() {
   const [loading, setLoading] = useState(true)
   const { getAccessTokenSilently } = useAuth0()
 
-  async function fetchBlog(blogId: string) {
+  async function refreshData(blogId: string) {
     setLoading(true)
     setError(null)
     getAccessTokenSilently()
@@ -33,5 +33,14 @@ export function useBlog() {
       })
   }
 
-  return { blog, error, loading, fetchBlog }
+  async function publish(postId: string): Promise<void> {
+    const token = await getAccessTokenSilently()
+    const res = await fetch(`${API_URL}/admin/posts/${postId}/publish`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    if (!res.ok) throw new Error(`Server returned ${res.status}`)
+  }
+
+  return { blog, error, loading, refreshData, publish }
 }

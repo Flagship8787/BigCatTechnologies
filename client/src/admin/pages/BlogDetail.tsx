@@ -10,20 +10,31 @@ import {
   CircularProgress,
   Typography,
   Button,
+  Chip,
 } from '@mui/material'
 import VisibilityIcon from '@mui/icons-material/Visibility'
 import EditIcon from '@mui/icons-material/Edit'
 import DeleteIcon from '@mui/icons-material/Delete'
+import PublishIcon from '@mui/icons-material/Publish'
 import { useBlog } from '../../hooks/admin/useBlog'
 
 export default function BlogDetail() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { blog, error, loading, fetchBlog } = useBlog()
+  const { blog, error, loading, refreshData, publish } = useBlog()
 
   useEffect(() => {
-    if (id) fetchBlog(id)
+    if (id) refreshData(id)
   }, [id])
+
+  async function handlePublish(postId: string) {
+    try {
+      await publish(postId)
+      if (id) refreshData(id)
+    } catch (err) {
+      console.error('Failed to publish post:', err)
+    }
+  }
 
   return (
     <>
@@ -48,16 +59,27 @@ export default function BlogDetail() {
               {blog.posts.map((post) => (
                 <TableRow key={post.id}>
                   <TableCell>{post.title}</TableCell>
-                  <TableCell>{post.state}</TableCell>
+                  <TableCell>
+                    <Chip
+                      label={post.state}
+                      color={post.state === 'published' ? 'success' : post.state === 'drafted' ? 'default' : 'error'}
+                      size="small"
+                    />
+                  </TableCell>
                   <TableCell>{new Date(post.created_at).toLocaleDateString()}</TableCell>
                   <TableCell>{new Date(post.updated_at).toLocaleDateString()}</TableCell>
                   <TableCell>
-                    <IconButton aria-label="view">
+                    <IconButton aria-label="view" onClick={() => navigate(`/admin/posts/${post.id}`)}>
                       <VisibilityIcon />
                     </IconButton>
                     <IconButton aria-label="edit" onClick={() => navigate(`/admin/posts/${post.id}/edit`)}>
                       <EditIcon />
                     </IconButton>
+                    {post.state === 'drafted' && (
+                      <IconButton aria-label="publish" onClick={() => handlePublish(post.id)}>
+                        <PublishIcon />
+                      </IconButton>
+                    )}
                     <IconButton aria-label="delete">
                       <DeleteIcon />
                     </IconButton>

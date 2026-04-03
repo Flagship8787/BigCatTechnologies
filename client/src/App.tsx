@@ -10,6 +10,7 @@ import BlogDetail from './admin/pages/BlogDetail'
 import CreateBlog from './admin/pages/CreateBlog'
 import NewPost from './admin/pages/NewPost'
 import EditPost from './admin/pages/EditPost'
+import PostDetails from './admin/pages/PostDetails'
 import Mcp from './pages/Mcp'
 import About from './pages/About'
 import Contact from './pages/Contact'
@@ -79,6 +80,7 @@ export default function App() {
         <Route path="/admin/blogs/new" element={<CreateBlog />} />
         <Route path="/admin/blogs/:id" element={<BlogDetail />} />
         <Route path="/admin/blogs/:blogId/posts/new" element={<NewPost />} />
+        <Route path="/admin/posts/:postId" element={<PostDetails />} />
         <Route path="/admin/posts/:postId/edit" element={<EditPost />} />
       </Route>
     </Routes>
