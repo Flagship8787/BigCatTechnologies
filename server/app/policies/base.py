@@ -10,11 +10,11 @@ __all__ = ["BasePolicy", "NotAuthorized"]
 
 class BasePolicy(ABC):
     def __init__(self, token: SessionToken):
-        self.scopes = token.scope.split()
+        self.permissions = token.permissions
         self.user_id = token.sub
 
-    def has_scope(self, *scopes: str) -> bool:
-        return any(s in self.scopes for s in scopes)
+    def has_permission(self, *permissions: str) -> bool:
+        return any(p in self.permissions for p in permissions)
 
     @abstractmethod
     def scope(self, action: str) -> Select: ...

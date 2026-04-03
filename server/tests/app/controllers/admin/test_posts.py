@@ -11,7 +11,7 @@ from app.models.post import PostState
 from tests.conftest import create_blog, create_post
 
 
-def _make_admin_posts_app(db_session: AsyncSession, scope: str) -> FastAPI:
+def _make_admin_posts_app(db_session: AsyncSession, permissions: list) -> FastAPI:
     test_app = FastAPI()
     register_admin_posts(test_app)
 
@@ -19,7 +19,7 @@ def _make_admin_posts_app(db_session: AsyncSession, scope: str) -> FastAPI:
         yield db_session
 
     async def override_require_auth0_token():
-        return SessionToken(sub="auth0|test123", scope=scope)
+        return SessionToken(sub="auth0|test123", permissions=permissions)
 
     test_app.dependency_overrides[get_db] = override_get_db
     test_app.dependency_overrides[require_auth0_token] = override_require_auth0_token
@@ -40,22 +40,22 @@ def unauthed_posts_app(db_session: AsyncSession) -> FastAPI:
 
 @pytest.fixture
 def no_scope_posts_app(db_session: AsyncSession) -> FastAPI:
-    return _make_admin_posts_app(db_session, scope="")
+    return _make_admin_posts_app(db_session, permissions=[])
 
 
 @pytest.fixture
 def admin_posts_app(db_session: AsyncSession) -> FastAPI:
-    return _make_admin_posts_app(db_session, scope="admin")
+    return _make_admin_posts_app(db_session, permissions=["admin"])
 
 
 @pytest.fixture
 def posts_admin_posts_app(db_session: AsyncSession) -> FastAPI:
-    return _make_admin_posts_app(db_session, scope="posts:admin")
+    return _make_admin_posts_app(db_session, permissions=["posts:admin"])
 
 
 @pytest.fixture
 def own_scope_posts_app(db_session: AsyncSession) -> FastAPI:
-    return _make_admin_posts_app(db_session, scope="posts:admin:own")
+    return _make_admin_posts_app(db_session, permissions=["posts:admin:own"])
 
 
 # --- Auth tests ---
@@ -131,7 +131,7 @@ async def test_publish_post_returns_422_when_deleted(admin_posts_app: FastAPI, d
 # --- Success cases ---
 
 @pytest.mark.asyncio
-async def test_publish_post_returns_200_with_admin_scope(admin_posts_app: FastAPI, db_session: AsyncSession):
+async def test_publish_post_returns_200_with_admin_permission(admin_posts_app: FastAPI, db_session: AsyncSession):
     blog = await create_blog(db_session)
     post = await create_post(db_session, blog=blog, state=PostState.drafted.value)
 
@@ -147,7 +147,7 @@ async def test_publish_post_returns_200_with_admin_scope(admin_posts_app: FastAP
 
 
 @pytest.mark.asyncio
-async def test_publish_post_returns_200_with_posts_admin_scope(posts_admin_posts_app: FastAPI, db_session: AsyncSession):
+async def test_publish_post_returns_200_with_posts_admin_permission(posts_admin_posts_app: FastAPI, db_session: AsyncSession):
     blog = await create_blog(db_session)
     post = await create_post(db_session, blog=blog, state=PostState.drafted.value)
 
@@ -161,7 +161,7 @@ async def test_publish_post_returns_200_with_posts_admin_scope(posts_admin_posts
 
 
 @pytest.mark.asyncio
-async def test_publish_post_returns_200_with_own_scope_for_own_blog(
+async def test_publish_post_returns_200_with_own_permission_for_own_blog(
     own_scope_posts_app: FastAPI, db_session: AsyncSession
 ):
     blog = await create_blog(db_session, owner_id="auth0|test123")
@@ -177,10 +177,10 @@ async def test_publish_post_returns_200_with_own_scope_for_own_blog(
 
 
 @pytest.mark.asyncio
-async def test_publish_post_returns_403_with_own_scope_for_other_users_blog(
+async def test_publish_post_returns_404_with_own_permission_for_other_users_blog(
     own_scope_posts_app: FastAPI, db_session: AsyncSession
 ):
-    # With scoped queries, own-scope user cannot see posts on another user's blog.
+    # With scoped queries, own-permission user cannot see posts on another user's blog.
     # The post is filtered out of the query → 404 (existence is not revealed).
     blog = await create_blog(db_session, owner_id="auth0|someone-else")
     post = await create_post(db_session, blog=blog, state=PostState.drafted.value)
