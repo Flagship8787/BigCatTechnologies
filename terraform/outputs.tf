@@ -27,3 +27,8 @@ output "client_cloud_run_url" {
   description = "The Cloud Run URL for the React client service"
   value       = google_cloud_run_v2_service.client.uri
 }
+
+output "vite_auth0_audience" {
+  description = "The Auth0 audience value to set as the VITE_AUTH0_AUDIENCE GitHub Actions secret"
+  value       = var.auth0_audience
+}
