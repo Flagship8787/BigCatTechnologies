@@ -1,7 +1,9 @@
 # Builds, pushes, and deploys the React client Docker image to Google Artifact Registry + Cloud Run after ALL tests pass on main.
 # Triggered by the Tests workflow (server + client jobs must both succeed).
 # Uses Workload Identity Federation (keyless auth).
-# Required secrets: GCP_PROJECT_ID, GCP_WORKLOAD_IDENTITY_PROVIDER, GCP_SERVICE_ACCOUNT, VITE_API_URL
+# Required secrets:   GCP_PROJECT_ID, GCP_WORKLOAD_IDENTITY_PROVIDER, GCP_SERVICE_ACCOUNT
+# Required variables: VITE_API_URL, VITE_AUTH0_DOMAIN, VITE_AUTH0_CLIENT_ID, VITE_AUTH0_AUDIENCE
+#   (set as Actions *variables*, not secrets — values sourced from terraform outputs)
 
 name: Docker Build and Push - Client
 
@@ -50,10 +52,10 @@ jobs:
           file: client/Dockerfile
           push: true
           build-args: |
-            VITE_API_URL=${{ secrets.VITE_API_URL }}
-            VITE_AUTH0_DOMAIN=${{ secrets.VITE_AUTH0_DOMAIN }}
-            VITE_AUTH0_CLIENT_ID=${{ secrets.VITE_AUTH0_CLIENT_ID }}
-            VITE_AUTH0_AUDIENCE=${{ secrets.VITE_AUTH0_AUDIENCE }}
+            VITE_API_URL=${{ vars.VITE_API_URL }}
+            VITE_AUTH0_DOMAIN=${{ vars.VITE_AUTH0_DOMAIN }}
+            VITE_AUTH0_CLIENT_ID=${{ vars.VITE_AUTH0_CLIENT_ID }}
+            VITE_AUTH0_AUDIENCE=${{ vars.VITE_AUTH0_AUDIENCE }}
           tags: |
             us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/bigcat-client/client:latest
             us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/bigcat-client/client:${{ github.event.workflow_run.head_sha }}

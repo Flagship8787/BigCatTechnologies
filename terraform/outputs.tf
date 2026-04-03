@@ -28,7 +28,28 @@ output "client_cloud_run_url" {
   value       = google_cloud_run_v2_service.client.uri
 }
 
+# ---------------------------------------------------------------------------
+# GitHub Actions variable values for the React client build
+# These are non-sensitive — set them as Actions *variables* (not secrets).
+# After terraform apply, run: terraform output -json | jq '{...}'
+# ---------------------------------------------------------------------------
+
+output "vite_api_url" {
+  description = "VITE_API_URL — GitHub Actions variable for the client Docker build"
+  value       = var.api_base_url
+}
+
+output "vite_auth0_domain" {
+  description = "VITE_AUTH0_DOMAIN — GitHub Actions variable for the client Docker build"
+  value       = var.auth0_domain
+}
+
+output "vite_auth0_client_id" {
+  description = "VITE_AUTH0_CLIENT_ID — GitHub Actions variable for the client Docker build"
+  value       = var.auth0_client_id
+}
+
 output "vite_auth0_audience" {
-  description = "The Auth0 audience value to set as the VITE_AUTH0_AUDIENCE GitHub Actions secret"
+  description = "VITE_AUTH0_AUDIENCE — GitHub Actions variable for the client Docker build"
   value       = var.auth0_audience
 }

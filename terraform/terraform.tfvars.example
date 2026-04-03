@@ -8,6 +8,7 @@ redis_port    = "6379"
 redis_use_ssl = "false"
 
 # Auth0 (non-secret)
+auth0_domain         = "your-tenant.us.auth0.com"
 auth0_jwks_uri       = "https://your-tenant.auth0.com/.well-known/jwks.json"
 auth0_issuer         = "https://your-tenant.auth0.com/"
 auth0_audience       = "https://your-api-audience"
