@@ -43,6 +43,11 @@ variable "redis_use_ssl" {
   default     = "false"
 }
 
+variable "auth0_domain" {
+  description = "Auth0 tenant domain (e.g. your-tenant.us.auth0.com) — used by the React client"
+  type        = string
+}
+
 variable "auth0_jwks_uri" {
   description = "Auth0 JWKS URI for JWT verification"
   type        = string
