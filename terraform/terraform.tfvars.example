@@ -1,20 +1,27 @@
+# Non-sensitive defaults — copy to terraform.tfvars for local use only.
+# In CI, all variables are injected via TF_VAR_* GitHub Actions secrets.
+# Never commit secret values to terraform.tfvars or this file.
+
 project_id  = "your-gcp-project-id"
 region      = "us-central1"
 github_repo = "BigCatTechnologies/bigcat-app"
-
-db_password = "some-password"
 
 # Redis (OAuthProxy cache storage)
 redis_host    = "your-redis-host"
 redis_port    = "6379"
 redis_use_ssl = "false"
 
-# Auth0
+# Auth0 (non-secret)
 auth0_jwks_uri       = "https://your-tenant.auth0.com/.well-known/jwks.json"
 auth0_issuer         = "https://your-tenant.auth0.com/"
-auth0_audience       = "your-api-audience"
+auth0_audience       = "https://your-api-audience"
 auth0_auth_endpoint  = "https://your-tenant.auth0.com/authorize"
 auth0_token_endpoint = "https://your-tenant.auth0.com/oauth/token"
 auth0_client_id      = "your-auth0-client-id"
 api_base_url         = "https://your-cloud-run-service-url"
 auth0_redirect_path  = "/oauth/callback"
+
+# Secrets — set these as TF_VAR_* GitHub Actions secrets, not here:
+#   TF_VAR_db_password
+#   TF_VAR_redis_password
+#   TF_VAR_auth0_client_secret

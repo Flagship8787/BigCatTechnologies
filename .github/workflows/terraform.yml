@@ -1,0 +1,115 @@
+# Runs terraform plan on PRs and terraform apply on pushes to main.
+# Sensitive variables are injected via TF_VAR_* env vars from GitHub secrets —
+# never commit secret values to terraform.tfvars.
+#
+# Required GitHub secrets:
+#   GCP_WORKLOAD_IDENTITY_PROVIDER  — Workload Identity Federation provider resource name
+#   GCP_SERVICE_ACCOUNT             — Service account email for WIF
+#   TF_VAR_project_id               — GCP project ID
+#   TF_VAR_github_repo              — GitHub repo in org/repo format
+#   TF_VAR_db_password              — Cloud SQL postgres password
+#   TF_VAR_redis_host               — Redis host
+#   TF_VAR_redis_password           — Redis password
+#   TF_VAR_auth0_jwks_uri           — Auth0 JWKS URI
+#   TF_VAR_auth0_issuer             — Auth0 issuer URL
+#   TF_VAR_auth0_audience           — Auth0 API audience
+#   TF_VAR_auth0_auth_endpoint      — Auth0 authorization endpoint
+#   TF_VAR_auth0_token_endpoint     — Auth0 token endpoint
+#   TF_VAR_auth0_client_id          — Auth0 client ID
+#   TF_VAR_auth0_client_secret      — Auth0 client secret
+#   TF_VAR_api_base_url             — Public API base URL
+
+name: Terraform
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'terraform/**'
+  pull_request:
+    paths:
+      - 'terraform/**'
+
+jobs:
+  terraform:
+    name: Terraform ${{ github.event_name == 'push' && 'Apply' || 'Plan' }}
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      id-token: write       # Required for Workload Identity Federation
+      pull-requests: write  # Required to post plan output as PR comment
+
+    defaults:
+      run:
+        working-directory: terraform
+
+    env:
+      TF_VAR_project_id:            ${{ secrets.TF_VAR_project_id }}
+      TF_VAR_github_repo:           ${{ secrets.TF_VAR_github_repo }}
+      TF_VAR_db_password:           ${{ secrets.TF_VAR_db_password }}
+      TF_VAR_redis_host:            ${{ secrets.TF_VAR_redis_host }}
+      TF_VAR_redis_password:        ${{ secrets.TF_VAR_redis_password }}
+      TF_VAR_auth0_jwks_uri:        ${{ secrets.TF_VAR_auth0_jwks_uri }}
+      TF_VAR_auth0_issuer:          ${{ secrets.TF_VAR_auth0_issuer }}
+      TF_VAR_auth0_audience:        ${{ secrets.TF_VAR_auth0_audience }}
+      TF_VAR_auth0_auth_endpoint:   ${{ secrets.TF_VAR_auth0_auth_endpoint }}
+      TF_VAR_auth0_token_endpoint:  ${{ secrets.TF_VAR_auth0_token_endpoint }}
+      TF_VAR_auth0_client_id:       ${{ secrets.TF_VAR_auth0_client_id }}
+      TF_VAR_auth0_client_secret:   ${{ secrets.TF_VAR_auth0_client_secret }}
+      TF_VAR_api_base_url:          ${{ secrets.TF_VAR_api_base_url }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Format Check
+        run: terraform fmt -check
+
+      - name: Terraform Validate
+        run: terraform validate
+
+      - name: Terraform Plan
+        id: plan
+        run: terraform plan -no-color -out=tfplan
+        continue-on-error: true
+
+      - name: Post plan to PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const output = `#### Terraform Plan \`${{ steps.plan.outcome }}\`
+
+            <details><summary>Show Plan</summary>
+
+            \`\`\`
+            ${{ steps.plan.outputs.stdout }}
+            \`\`\`
+
+            </details>`;
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output
+            });
+
+      - name: Fail on plan error
+        if: steps.plan.outcome == 'failure'
+        run: exit 1
+
+      - name: Terraform Apply
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: terraform apply -auto-approve tfplan
