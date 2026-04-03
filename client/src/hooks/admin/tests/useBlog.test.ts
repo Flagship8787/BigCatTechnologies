@@ -52,9 +52,14 @@ describe('useBlog (admin)', () => {
     expect(result.current.error).toBeNull()
   })
 
-  it('exposes a fetchBlog function', () => {
+  it('exposes a refreshData function', () => {
     const { result } = renderHook(() => useBlog())
-    expect(typeof result.current.fetchBlog).toBe('function')
+    expect(typeof result.current.refreshData).toBe('function')
+  })
+
+  it('exposes a publish function', () => {
+    const { result } = renderHook(() => useBlog())
+    expect(typeof result.current.publish).toBe('function')
   })
 
   it('sets blog and clears loading on successful fetch', async () => {
@@ -63,7 +68,7 @@ describe('useBlog (admin)', () => {
     const { result } = renderHook(() => useBlog())
 
     await act(async () => {
-      result.current.fetchBlog('blog-abc')
+      result.current.refreshData('blog-abc')
     })
 
     await waitFor(() => expect(result.current.loading).toBe(false))
@@ -78,7 +83,7 @@ describe('useBlog (admin)', () => {
     const { result } = renderHook(() => useBlog())
 
     await act(async () => {
-      result.current.fetchBlog('blog-abc')
+      result.current.refreshData('blog-abc')
     })
 
     await waitFor(() => expect(result.current.loading).toBe(false))
@@ -94,7 +99,7 @@ describe('useBlog (admin)', () => {
     const { result } = renderHook(() => useBlog())
 
     await act(async () => {
-      result.current.fetchBlog('blog-abc')
+      result.current.refreshData('blog-abc')
     })
 
     await waitFor(() => expect(result.current.loading).toBe(false))
@@ -109,7 +114,7 @@ describe('useBlog (admin)', () => {
     const { result } = renderHook(() => useBlog())
 
     await act(async () => {
-      result.current.fetchBlog('blog-missing')
+      result.current.refreshData('blog-missing')
     })
 
     await waitFor(() => expect(result.current.loading).toBe(false))
@@ -124,7 +129,7 @@ describe('useBlog (admin)', () => {
     const { result } = renderHook(() => useBlog())
 
     await act(async () => {
-      result.current.fetchBlog('blog-abc')
+      result.current.refreshData('blog-abc')
     })
 
     await waitFor(() => expect(result.current.loading).toBe(false))
@@ -133,13 +138,13 @@ describe('useBlog (admin)', () => {
     expect(result.current.error).toBe('Network failure')
   })
 
-  it('resets loading and error state before each fetchBlog call', async () => {
+  it('resets loading and error state before each refreshData call', async () => {
     vi.mocked(fetch).mockResolvedValueOnce(makeFetchResponse(null, false, 500))
 
     const { result } = renderHook(() => useBlog())
 
     await act(async () => {
-      result.current.fetchBlog('blog-abc')
+      result.current.refreshData('blog-abc')
     })
 
     await waitFor(() => expect(result.current.loading).toBe(false))
@@ -148,12 +153,53 @@ describe('useBlog (admin)', () => {
     vi.mocked(fetch).mockResolvedValueOnce(makeFetchResponse(mockBlog))
 
     await act(async () => {
-      result.current.fetchBlog('blog-abc')
+      result.current.refreshData('blog-abc')
     })
 
     await waitFor(() => expect(result.current.loading).toBe(false))
 
     expect(result.current.blog).toEqual(mockBlog)
     expect(result.current.error).toBeNull()
+  })
+
+  describe('publish', () => {
+    it('calls POST /admin/posts/:postId/publish with auth header', async () => {
+      vi.mocked(fetch).mockResolvedValueOnce(makeFetchResponse({}, true, 200))
+
+      const { result } = renderHook(() => useBlog())
+
+      await act(async () => {
+        await result.current.publish('post-1')
+      })
+
+      expect(fetch).toHaveBeenCalledWith('/admin/posts/post-1/publish', {
+        method: 'POST',
+        headers: { Authorization: 'Bearer test-token' },
+      })
+    })
+
+    it('resolves without error on success', async () => {
+      vi.mocked(fetch).mockResolvedValueOnce(makeFetchResponse({}, true, 200))
+
+      const { result } = renderHook(() => useBlog())
+
+      await expect(
+        act(async () => {
+          await result.current.publish('post-1')
+        })
+      ).resolves.not.toThrow()
+    })
+
+    it('throws when server returns a non-OK status', async () => {
+      vi.mocked(fetch).mockResolvedValueOnce(makeFetchResponse(null, false, 422))
+
+      const { result } = renderHook(() => useBlog())
+
+      await expect(
+        act(async () => {
+          await result.current.publish('post-1')
+        })
+      ).rejects.toThrow('Server returned 422')
+    })
   })
 })
