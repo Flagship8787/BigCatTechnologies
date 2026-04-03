@@ -1,8 +1,8 @@
 from fastmcp import FastMCP
-from fastmcp.server.auth import require_scopes
 
 from app.domains.posts.create.operation import Operation as CreatePostInBlog
 from app.domains.posts.serializer import PostSerializer
+from app.mcp.permissions import require_permissions, POSTS_CREATE
 
 
 def register(mcp: FastMCP):
@@ -13,7 +13,7 @@ def register(mcp: FastMCP):
             'hello': 'world'
         }
 
-    @mcp.tool(auth=require_scopes("posts:create"))
+    @mcp.tool(auth=require_permissions(POSTS_CREATE))
     async def create_post_in_blog(blog_id: str, title: str, body: str) -> dict:
         """Create a new drafted post in the specified blog."""
         post = await CreatePostInBlog().perform(blog_id=blog_id, title=title, body=body)

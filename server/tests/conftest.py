@@ -50,7 +50,7 @@ def admin_app(db_session: AsyncSession) -> FastAPI:
         yield db_session
 
     async def override_require_auth0_token():
-        return SessionToken(sub="auth0|test123", scope="admin")
+        return SessionToken(sub="auth0|test123", permissions=["admin"])
 
     test_app.dependency_overrides[get_db] = override_get_db
     test_app.dependency_overrides[require_auth0_token] = override_require_auth0_token

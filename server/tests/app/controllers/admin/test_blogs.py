@@ -12,7 +12,7 @@ from app.models.post import PostState
 from tests.conftest import create_blog, create_post
 
 
-def _make_admin_app(db_session: AsyncSession, scope: str) -> FastAPI:
+def _make_admin_app(db_session: AsyncSession, permissions: list) -> FastAPI:
     test_app = FastAPI()
     register_admin_blogs(test_app)
 
@@ -20,7 +20,7 @@ def _make_admin_app(db_session: AsyncSession, scope: str) -> FastAPI:
         yield db_session
 
     async def override_require_auth0_token():
-        return SessionToken(sub="auth0|test123", scope=scope)
+        return SessionToken(sub="auth0|test123", permissions=permissions)
 
     test_app.dependency_overrides[get_db] = override_get_db
     test_app.dependency_overrides[require_auth0_token] = override_require_auth0_token
@@ -42,14 +42,14 @@ def unauthed_admin_app(db_session: AsyncSession) -> FastAPI:
 
 @pytest.fixture
 def no_scope_admin_app(db_session: AsyncSession) -> FastAPI:
-    """Admin app with a token that has no recognized scopes."""
-    return _make_admin_app(db_session, scope="")
+    """Admin app with a token that has no recognized permissions."""
+    return _make_admin_app(db_session, permissions=[])
 
 
 @pytest.fixture
 def own_scope_admin_app(db_session: AsyncSession) -> FastAPI:
-    """Admin app with blogs:admin:own scope — can read all, update only own blogs."""
-    return _make_admin_app(db_session, scope="blogs:admin:own")
+    """Admin app with blogs:admin:own permission — can read all, update only own blogs."""
+    return _make_admin_app(db_session, permissions=["blogs:admin:own"])
 
 
 @pytest.mark.asyncio
