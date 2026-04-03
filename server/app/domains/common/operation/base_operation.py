@@ -30,6 +30,17 @@ class BaseOperation(ABC):
                 raise ValidationError(validator.errors)
             return await self._do_perform(db, *args, **kwargs)
 
+    async def perform_in(self, db, *args, **kwargs) -> Any:
+        """Validate, then perform the operation within a provided DB session.
+
+        Use this when the caller already holds a session (e.g. a controller).
+        Raises ValidationError if validation fails.
+        """
+        validator = self._validator(*args, **kwargs)
+        if not await validator.validate(db):
+            raise ValidationError(validator.errors)
+        return await self._do_perform(db, *args, **kwargs)
+
     @abstractmethod
     def _validator(self, *args, **kwargs) -> BaseValidator:
         """Return an initialized validator for the given args."""
