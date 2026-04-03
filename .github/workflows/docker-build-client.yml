@@ -53,6 +53,7 @@ jobs:
             VITE_API_URL=${{ secrets.VITE_API_URL }}
             VITE_AUTH0_DOMAIN=${{ secrets.VITE_AUTH0_DOMAIN }}
             VITE_AUTH0_CLIENT_ID=${{ secrets.VITE_AUTH0_CLIENT_ID }}
+            VITE_AUTH0_AUDIENCE=${{ secrets.VITE_AUTH0_AUDIENCE }}
           tags: |
             us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/bigcat-client/client:latest
             us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/bigcat-client/client:${{ github.event.workflow_run.head_sha }}
