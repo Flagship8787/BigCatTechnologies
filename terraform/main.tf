@@ -101,6 +101,11 @@ resource "google_cloud_run_v2_service" "client" {
   ingress             = "INGRESS_TRAFFIC_ALL"
   deletion_protection = false
 
+  # CI deploys new image revisions via gcloud — Terraform manages config only.
+  lifecycle {
+    ignore_changes = [template]
+  }
+
   template {
     service_account = google_service_account.cloud_run_client.email
 
@@ -179,6 +184,11 @@ resource "google_cloud_run_v2_service" "server" {
   deletion_protection = false
 
   depends_on = [google_project_service.run]
+
+  # CI deploys new image revisions via gcloud — Terraform manages config only.
+  lifecycle {
+    ignore_changes = [template]
+  }
 
   template {
     service_account = google_service_account.cloud_run_server.email
