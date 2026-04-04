@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
   CircularProgress,
@@ -14,14 +14,18 @@ import { usePost } from '../../hooks/admin/usePost'
 export default function PostDetails() {
   const { postId } = useParams<{ postId: string }>()
   const navigate = useNavigate()
-  const { post, loading, error, fetchPost, publish } = usePost()
+  const { post, loading, error, fetchData, publish } = usePost()
 
   const [publishing, setPublishing] = useState(false)
   const [publishError, setPublishError] = useState<string | null>(null)
 
+  const handleFetchData = useCallback(() => {
+    if (postId) fetchData(postId)
+  }, [postId, fetchData])
+
   useEffect(() => {
-    if (postId) fetchPost(postId)
-  }, [postId])
+    handleFetchData()
+  }, [handleFetchData])
 
   async function handlePublish() {
     if (!postId) return

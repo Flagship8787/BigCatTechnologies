@@ -47,21 +47,21 @@ describe('usePost (admin)', () => {
     expect(result.current.error).toBeNull()
   })
 
-  it('exposes fetchPost and publish functions', () => {
+  it('exposes fetchData and publish functions', () => {
     const { result } = renderHook(() => usePost())
-    expect(typeof result.current.fetchPost).toBe('function')
+    expect(typeof result.current.fetchData).toBe('function')
     expect(typeof result.current.publish).toBe('function')
   })
 
-  // --- fetchPost ---
+  // --- fetchData ---
 
-  describe('fetchPost', () => {
+  describe('fetchData', () => {
     it('sets post and clears loading on success', async () => {
       vi.mocked(fetch).mockResolvedValueOnce(makeFetchResponse(mockPost))
 
       const { result } = renderHook(() => usePost())
 
-      await act(async () => { result.current.fetchPost('post-123') })
+      await act(async () => { result.current.fetchData('post-123') })
       await waitFor(() => expect(result.current.loading).toBe(false))
 
       expect(result.current.post).toEqual(mockPost)
@@ -73,7 +73,7 @@ describe('usePost (admin)', () => {
 
       const { result } = renderHook(() => usePost())
 
-      await act(async () => { result.current.fetchPost('post-123') })
+      await act(async () => { result.current.fetchData('post-123') })
       await waitFor(() => expect(result.current.loading).toBe(false))
 
       expect(fetch).toHaveBeenCalledWith('/posts/post-123', {
@@ -86,7 +86,7 @@ describe('usePost (admin)', () => {
 
       const { result } = renderHook(() => usePost())
 
-      await act(async () => { result.current.fetchPost('post-missing') })
+      await act(async () => { result.current.fetchData('post-missing') })
       await waitFor(() => expect(result.current.loading).toBe(false))
 
       expect(result.current.post).toBeNull()
@@ -98,7 +98,7 @@ describe('usePost (admin)', () => {
 
       const { result } = renderHook(() => usePost())
 
-      await act(async () => { result.current.fetchPost('post-123') })
+      await act(async () => { result.current.fetchData('post-123') })
       await waitFor(() => expect(result.current.loading).toBe(false))
 
       expect(result.current.post).toBeNull()
@@ -110,13 +110,13 @@ describe('usePost (admin)', () => {
 
       const { result } = renderHook(() => usePost())
 
-      await act(async () => { result.current.fetchPost('post-123') })
+      await act(async () => { result.current.fetchData('post-123') })
       await waitFor(() => expect(result.current.loading).toBe(false))
       expect(result.current.error).toBeTruthy()
 
       vi.mocked(fetch).mockResolvedValueOnce(makeFetchResponse(mockPost))
 
-      await act(async () => { result.current.fetchPost('post-123') })
+      await act(async () => { result.current.fetchData('post-123') })
       await waitFor(() => expect(result.current.loading).toBe(false))
 
       expect(result.current.post).toEqual(mockPost)

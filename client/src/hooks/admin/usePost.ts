@@ -10,7 +10,7 @@ export function usePost() {
   const [loading, setLoading] = useState(true)
   const { getAccessTokenSilently } = useAuth0()
 
-  async function fetchPost(postId: string) {
+  async function fetchData(postId: string) {
     setLoading(true)
     setError(null)
     try {
@@ -43,5 +43,5 @@ export function usePost() {
     return updated
   }
 
-  return { post, error, loading, fetchPost, publish }
+  return { post, error, loading, fetchData, publish }
 }

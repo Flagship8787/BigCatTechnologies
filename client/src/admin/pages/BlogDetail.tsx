@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
   Table,
@@ -29,14 +29,14 @@ export default function BlogDetail() {
     if (id) refreshData(id)
   }, [id])
 
-  async function handlePublish(postId: string) {
+  const handlePublish = useCallback(async (postId: string) => {
     try {
       await publish(postId)
       if (id) refreshData(id)
     } catch (err) {
       console.error('Failed to publish post:', err)
     }
-  }
+  }, [publish, refreshData, id])
 
   return (
     <>
