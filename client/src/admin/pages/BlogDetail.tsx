@@ -27,7 +27,8 @@ export default function BlogDetail() {
 
   useEffect(() => {
     if (id) refreshData(id)
-  }, [id, refreshData])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id])
 
   const handlePublish = useCallback(async (postId: string) => {
     try {

@@ -21,7 +21,8 @@ export default function PostDetails() {
 
   useEffect(() => {
     if (postId) fetchData(postId)
-  }, [postId, fetchData])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [postId])
 
   const handlePublish = useCallback(async () => {
     if (!postId) return
