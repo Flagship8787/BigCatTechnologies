@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useCallback } from "react"
 import { useAuth0 } from "@auth0/auth0-react"
 import type { BlogWithPosts } from "../../dtos/Blog"
 
@@ -10,7 +10,7 @@ export function useBlog() {
   const [loading, setLoading] = useState(true)
   const { getAccessTokenSilently } = useAuth0()
 
-  async function refreshData(blogId: string) {
+  const refreshData = useCallback(async (blogId: string) => {
     setLoading(true)
     setError(null)
     getAccessTokenSilently()
@@ -31,7 +31,7 @@ export function useBlog() {
         setError(err.message)
         setLoading(false)
       })
-  }
+  }, [getAccessTokenSilently])
 
   return { blog, error, loading, refreshData }
 }

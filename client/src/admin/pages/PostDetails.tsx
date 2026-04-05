@@ -19,15 +19,11 @@ export default function PostDetails() {
   const [publishing, setPublishing] = useState(false)
   const [publishError, setPublishError] = useState<string | null>(null)
 
-  const handleFetchData = useCallback(() => {
+  useEffect(() => {
     if (postId) fetchData(postId)
   }, [postId, fetchData])
 
-  useEffect(() => {
-    handleFetchData()
-  }, [handleFetchData])
-
-  async function handlePublish() {
+  const handlePublish = useCallback(async () => {
     if (!postId) return
     setPublishing(true)
     setPublishError(null)
@@ -38,7 +34,7 @@ export default function PostDetails() {
     } finally {
       setPublishing(false)
     }
-  }
+  }, [postId, publish])
 
   return (
     <>

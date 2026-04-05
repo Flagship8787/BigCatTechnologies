@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { useAuth0 } from '@auth0/auth0-react'
 import type { Post } from '../../dtos/Post'
 
@@ -10,7 +10,7 @@ export function usePost() {
   const [loading, setLoading] = useState(true)
   const { getAccessTokenSilently } = useAuth0()
 
-  async function fetchData(postId: string) {
+  const fetchData = useCallback(async (postId: string) => {
     setLoading(true)
     setError(null)
     try {
@@ -26,9 +26,9 @@ export function usePost() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [getAccessTokenSilently])
 
-  async function publish(postId: string): Promise<Post> {
+  const publish = useCallback(async (postId: string): Promise<Post> => {
     const token = await getAccessTokenSilently()
     const res = await fetch(`${API_URL}/admin/posts/${postId}/publish`, {
       method: 'POST',
@@ -41,7 +41,7 @@ export function usePost() {
     const updated = await res.json() as Post
     setPost(updated)
     return updated
-  }
+  }, [getAccessTokenSilently])
 
   return { post, error, loading, fetchData, publish }
 }

@@ -27,7 +27,7 @@ export default function BlogDetail() {
 
   useEffect(() => {
     if (id) refreshData(id)
-  }, [id])
+  }, [id, refreshData])
 
   const handlePublish = useCallback(async (postId: string) => {
     try {
