@@ -10,7 +10,7 @@ export function useBlog() {
   const [loading, setLoading] = useState(true)
   const { getAccessTokenSilently } = useAuth0()
 
-  async function fetchBlog(blogId: string) {
+  async function refreshData(blogId: string) {
     setLoading(true)
     setError(null)
     getAccessTokenSilently()
@@ -33,5 +33,5 @@ export function useBlog() {
       })
   }
 
-  return { blog, error, loading, fetchBlog }
+  return { blog, error, loading, refreshData }
 }
