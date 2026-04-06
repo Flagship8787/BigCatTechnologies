@@ -9,6 +9,7 @@ import {
   Divider,
   Paper,
 } from '@mui/material'
+import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import { usePost } from '../../hooks/admin/usePost'
 
 export default function PostDetails() {
@@ -39,8 +40,8 @@ export default function PostDetails() {
 
   return (
     <>
-      <Button variant="text" onClick={() => navigate(-1)} sx={{ mb: 2 }}>
-        ← Back
+      <Button variant="text" onClick={() => navigate(-1)} sx={{ mb: 2 }} startIcon={<ArrowBackIcon />}>
+        Back
       </Button>
 
       {loading && <CircularProgress />}
