@@ -15,7 +15,7 @@ export function usePost() {
     setError(null)
     try {
       const token = await getAccessTokenSilently()
-      const res = await fetch(`${API_URL}/posts/${postId}`, {
+      const res = await fetch(`${API_URL}/admin/posts/${postId}`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       if (!res.ok) throw new Error(`Server returned ${res.status}`)

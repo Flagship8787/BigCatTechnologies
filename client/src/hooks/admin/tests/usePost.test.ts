@@ -76,7 +76,7 @@ describe('usePost (admin)', () => {
       await act(async () => { result.current.fetchData('post-123') })
       await waitFor(() => expect(result.current.loading).toBe(false))
 
-      expect(fetch).toHaveBeenCalledWith('/posts/post-123', {
+      expect(fetch).toHaveBeenCalledWith('/admin/posts/post-123', {
         headers: { Authorization: 'Bearer test-token' },
       })
     })

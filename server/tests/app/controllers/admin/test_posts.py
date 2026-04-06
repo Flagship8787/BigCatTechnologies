@@ -58,6 +58,117 @@ def own_scope_posts_app(db_session: AsyncSession) -> FastAPI:
     return _make_admin_posts_app(db_session, permissions=["posts:admin:own"])
 
 
+# ============================================================
+# GET /admin/posts/{post_id}
+# ============================================================
+
+# --- Auth / authz ---
+
+@pytest.mark.asyncio
+async def test_get_post_returns_401_without_auth_token(unauthed_posts_app: FastAPI, db_session: AsyncSession):
+    blog = await create_blog(db_session)
+    post = await create_post(db_session, blog=blog)
+
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=unauthed_posts_app), base_url="http://test"
+    ) as client:
+        response = await client.get(f"/admin/posts/{post.id}")
+
+    assert response.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_get_post_returns_403_without_valid_scope(no_scope_posts_app: FastAPI, db_session: AsyncSession):
+    blog = await create_blog(db_session)
+    post = await create_post(db_session, blog=blog)
+
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=no_scope_posts_app), base_url="http://test"
+    ) as client:
+        response = await client.get(f"/admin/posts/{post.id}")
+
+    assert response.status_code == 403
+
+
+# --- Not found ---
+
+@pytest.mark.asyncio
+async def test_get_post_returns_404_for_unknown_post(admin_posts_app: FastAPI):
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=admin_posts_app), base_url="http://test"
+    ) as client:
+        response = await client.get("/admin/posts/nonexistent-id")
+
+    assert response.status_code == 404
+
+
+# --- Success cases ---
+
+@pytest.mark.asyncio
+async def test_get_post_returns_200_with_admin_permission(admin_posts_app: FastAPI, db_session: AsyncSession):
+    blog = await create_blog(db_session)
+    post = await create_post(db_session, blog=blog, state=PostState.drafted.value)
+
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=admin_posts_app), base_url="http://test"
+    ) as client:
+        response = await client.get(f"/admin/posts/{post.id}")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["id"] == post.id
+    assert body["state"] == PostState.drafted.value
+
+
+@pytest.mark.asyncio
+async def test_get_post_returns_200_with_posts_admin_permission(posts_admin_posts_app: FastAPI, db_session: AsyncSession):
+    blog = await create_blog(db_session)
+    post = await create_post(db_session, blog=blog, state=PostState.published.value)
+
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=posts_admin_posts_app), base_url="http://test"
+    ) as client:
+        response = await client.get(f"/admin/posts/{post.id}")
+
+    assert response.status_code == 200
+    assert response.json()["id"] == post.id
+
+
+@pytest.mark.asyncio
+async def test_get_post_returns_200_with_own_permission_for_own_blog(
+    own_scope_posts_app: FastAPI, db_session: AsyncSession
+):
+    blog = await create_blog(db_session, owner_id="auth0|test123")
+    post = await create_post(db_session, blog=blog, state=PostState.drafted.value)
+
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=own_scope_posts_app), base_url="http://test"
+    ) as client:
+        response = await client.get(f"/admin/posts/{post.id}")
+
+    assert response.status_code == 200
+    assert response.json()["id"] == post.id
+
+
+@pytest.mark.asyncio
+async def test_get_post_returns_404_with_own_permission_for_other_users_blog(
+    own_scope_posts_app: FastAPI, db_session: AsyncSession
+):
+    blog = await create_blog(db_session, owner_id="auth0|someone-else")
+    post = await create_post(db_session, blog=blog, state=PostState.drafted.value)
+
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=own_scope_posts_app), base_url="http://test"
+    ) as client:
+        response = await client.get(f"/admin/posts/{post.id}")
+
+    assert response.status_code == 404
+
+
+# ============================================================
+# POST /admin/posts/{post_id}/publish
+# ============================================================
+
 # --- Auth tests ---
 
 @pytest.mark.asyncio
