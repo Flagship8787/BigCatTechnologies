@@ -43,5 +43,24 @@ export function usePost() {
     return updated
   }
 
-  return { post, error, loading, fetchData, publish }
+  async function update(postId: string, values: { title: string; body: string; state: string }): Promise<Post> {
+    const token = await getAccessTokenSilently()
+    const res = await fetch(`${API_URL}/admin/posts/${postId}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(values),
+    })
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}))
+      throw new Error((body as { detail?: string }).detail ?? `Server returned ${res.status}`)
+    }
+    const updated = await res.json() as Post
+    setPost(updated)
+    return updated
+  }
+
+  return { post, error, loading, fetchData, publish, update }
 }

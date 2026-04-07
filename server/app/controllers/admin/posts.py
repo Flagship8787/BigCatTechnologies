@@ -8,8 +8,9 @@ from app.auth.dependencies import get_post_policy
 from app.db import get_db
 from app.domains.common.operation.errors import ValidationError
 from app.domains.posts.publish.operation import Operation as PublishOperation
+from app.domains.posts.update.operation import Operation as UpdateOperation
 from app.domains.posts.serializer import PostSerializer
-from app.models.post import Post, PostState
+from app.models.post import Post
 from app.policies.post_policy import PostPolicy
 
 
@@ -47,18 +48,13 @@ def register(app: FastAPI):
         if post is None:
             raise HTTPException(status_code=404, detail="Post not found")
 
-        if payload.title is not None:
-            post.title = payload.title
-        if payload.body is not None:
-            post.body = payload.body
-        if payload.state is not None:
-            if payload.state not in PostState._value2member_map_:
-                raise HTTPException(status_code=422, detail=f"Invalid state '{payload.state}'")
-            post.state = payload.state
-
-        await db.commit()
-        await db.refresh(post)
-        return PostSerializer(post).to_json()
+        try:
+            updated_post = await UpdateOperation().perform_in(db, post=post, title=payload.title, body=payload.body, state=payload.state)
+        except ValidationError as e:
+            all_errors = [msg for msgs in e.errors.values() for msg in msgs]
+            detail = all_errors[0] if all_errors else "Invalid request"
+            raise HTTPException(status_code=422, detail=detail)
+        return PostSerializer(updated_post).to_json()
 
     @app.post("/admin/posts/{post_id}/publish")
     async def publish_post(
