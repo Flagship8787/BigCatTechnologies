@@ -66,9 +66,10 @@ export default function PostDetails() {
             Last updated: {new Date(post.updated_at).toLocaleString()}
           </Typography>
 
-          <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap', mb: 3 }}>
-            {post.body}
-          </Typography>
+          <Box
+            sx={{ mb: 3 }}
+            dangerouslySetInnerHTML={{ __html: post.body }}
+          />
 
           {publishError && (
             <Typography color="error" sx={{ mb: 2 }}>{publishError}</Typography>
