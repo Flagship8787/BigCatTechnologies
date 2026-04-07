@@ -73,13 +73,24 @@ variable "auth0_token_endpoint" {
   type        = string
 }
 
-variable "auth0_client_id" {
-  description = "Auth0 client ID"
+variable "auth0_spa_client_id" {
+  description = "Auth0 client ID for the React SPA frontend"
   type        = string
 }
 
-variable "auth0_client_secret" {
-  description = "Auth0 client secret"
+variable "auth0_spa_client_secret" {
+  description = "Auth0 client secret for the React SPA (if applicable)"
+  type        = string
+  sensitive   = true
+}
+
+variable "auth0_mcp_client_id" {
+  description = "Auth0 client ID for the MCP OAuth proxy (Regular Web Application)"
+  type        = string
+}
+
+variable "auth0_mcp_client_secret" {
+  description = "Auth0 client secret for the MCP OAuth proxy"
   type        = string
   sensitive   = true
 }
