@@ -1,5 +1,7 @@
 import { useEffect } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import '../App.css'
 import './PostDetail.css'
 import Nav from '../components/Nav'
@@ -41,9 +43,9 @@ export default function PostDetail() {
               </time>
             </header>
             <div className="post-detail-body">
-              {post.body.split('\n').map((paragraph, i) =>
-                paragraph.trim() ? <p key={i}>{paragraph}</p> : null
-              )}
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                {post.body}
+              </ReactMarkdown>
             </div>
           </article>
         )}

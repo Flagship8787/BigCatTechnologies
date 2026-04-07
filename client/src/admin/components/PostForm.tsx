@@ -9,6 +9,8 @@ import {
   Box,
   Stack,
 } from '@mui/material'
+import SimpleMDE from 'react-simplemde-editor'
+import 'easymde/dist/easymde.min.css'
 
 interface PostFormValues {
   title: string
@@ -50,13 +52,9 @@ export default function PostForm({
           required
           fullWidth
         />
-        <TextField
-          label="Body"
+        <SimpleMDE
           value={body}
-          onChange={(e) => setBody(e.target.value)}
-          multiline
-          minRows={8}
-          fullWidth
+          onChange={(value) => setBody(value)}
         />
         <FormControl fullWidth>
           <InputLabel id="state-label">State</InputLabel>

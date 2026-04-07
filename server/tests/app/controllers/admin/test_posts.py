@@ -302,3 +302,171 @@ async def test_publish_post_returns_404_with_own_permission_for_other_users_blog
         response = await client.post(f"/admin/posts/{post.id}/publish")
 
     assert response.status_code == 404
+
+
+# ============================================================
+# PATCH /admin/posts/{post_id}
+# ============================================================
+
+# --- Auth / authz ---
+
+@pytest.mark.asyncio
+async def test_update_post_returns_401_without_auth_token(unauthed_posts_app: FastAPI, db_session: AsyncSession):
+    blog = await create_blog(db_session)
+    post = await create_post(db_session, blog=blog)
+
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=unauthed_posts_app), base_url="http://test"
+    ) as client:
+        response = await client.patch(f"/admin/posts/{post.id}", json={"title": "New Title"})
+
+    assert response.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_update_post_returns_403_without_valid_scope(no_scope_posts_app: FastAPI, db_session: AsyncSession):
+    blog = await create_blog(db_session)
+    post = await create_post(db_session, blog=blog)
+
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=no_scope_posts_app), base_url="http://test"
+    ) as client:
+        response = await client.patch(f"/admin/posts/{post.id}", json={"title": "New Title"})
+
+    assert response.status_code == 403
+
+
+# --- Not found ---
+
+@pytest.mark.asyncio
+async def test_update_post_returns_404_for_unknown_post(admin_posts_app: FastAPI):
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=admin_posts_app), base_url="http://test"
+    ) as client:
+        response = await client.patch("/admin/posts/nonexistent-id", json={"title": "New Title"})
+
+    assert response.status_code == 404
+
+
+# --- Validation ---
+
+@pytest.mark.asyncio
+async def test_update_post_returns_422_for_invalid_state(admin_posts_app: FastAPI, db_session: AsyncSession):
+    blog = await create_blog(db_session)
+    post = await create_post(db_session, blog=blog)
+
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=admin_posts_app), base_url="http://test"
+    ) as client:
+        response = await client.patch(f"/admin/posts/{post.id}", json={"state": "bogus"})
+
+    assert response.status_code == 422
+
+
+# --- Success cases ---
+
+@pytest.mark.asyncio
+async def test_update_post_updates_title(admin_posts_app: FastAPI, db_session: AsyncSession):
+    blog = await create_blog(db_session)
+    post = await create_post(db_session, blog=blog)
+
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=admin_posts_app), base_url="http://test"
+    ) as client:
+        response = await client.patch(f"/admin/posts/{post.id}", json={"title": "Updated Title"})
+
+    assert response.status_code == 200
+    assert response.json()["title"] == "Updated Title"
+
+
+@pytest.mark.asyncio
+async def test_update_post_updates_body(admin_posts_app: FastAPI, db_session: AsyncSession):
+    blog = await create_blog(db_session)
+    post = await create_post(db_session, blog=blog)
+
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=admin_posts_app), base_url="http://test"
+    ) as client:
+        response = await client.patch(f"/admin/posts/{post.id}", json={"body": "Updated body text."})
+
+    assert response.status_code == 200
+    assert response.json()["body"] == "Updated body text."
+
+
+@pytest.mark.asyncio
+async def test_update_post_updates_state(admin_posts_app: FastAPI, db_session: AsyncSession):
+    blog = await create_blog(db_session)
+    post = await create_post(db_session, blog=blog, state=PostState.drafted.value)
+
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=admin_posts_app), base_url="http://test"
+    ) as client:
+        response = await client.patch(f"/admin/posts/{post.id}", json={"state": PostState.published.value})
+
+    assert response.status_code == 200
+    assert response.json()["state"] == PostState.published.value
+
+
+@pytest.mark.asyncio
+async def test_update_post_updates_multiple_fields(admin_posts_app: FastAPI, db_session: AsyncSession):
+    blog = await create_blog(db_session)
+    post = await create_post(db_session, blog=blog)
+
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=admin_posts_app), base_url="http://test"
+    ) as client:
+        response = await client.patch(
+            f"/admin/posts/{post.id}",
+            json={"title": "New Title", "body": "New body.", "state": PostState.published.value},
+        )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["title"] == "New Title"
+    assert body["body"] == "New body."
+    assert body["state"] == PostState.published.value
+
+
+@pytest.mark.asyncio
+async def test_update_post_with_posts_admin_permission(posts_admin_posts_app: FastAPI, db_session: AsyncSession):
+    blog = await create_blog(db_session)
+    post = await create_post(db_session, blog=blog)
+
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=posts_admin_posts_app), base_url="http://test"
+    ) as client:
+        response = await client.patch(f"/admin/posts/{post.id}", json={"title": "Posts Admin Update"})
+
+    assert response.status_code == 200
+    assert response.json()["title"] == "Posts Admin Update"
+
+
+@pytest.mark.asyncio
+async def test_update_post_with_own_permission_for_own_blog(
+    own_scope_posts_app: FastAPI, db_session: AsyncSession
+):
+    blog = await create_blog(db_session, owner_id="auth0|test123")
+    post = await create_post(db_session, blog=blog)
+
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=own_scope_posts_app), base_url="http://test"
+    ) as client:
+        response = await client.patch(f"/admin/posts/{post.id}", json={"title": "Own Blog Update"})
+
+    assert response.status_code == 200
+    assert response.json()["title"] == "Own Blog Update"
+
+
+@pytest.mark.asyncio
+async def test_update_post_returns_404_with_own_permission_for_other_users_blog(
+    own_scope_posts_app: FastAPI, db_session: AsyncSession
+):
+    blog = await create_blog(db_session, owner_id="auth0|someone-else")
+    post = await create_post(db_session, blog=blog)
+
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=own_scope_posts_app), base_url="http://test"
+    ) as client:
+        response = await client.patch(f"/admin/posts/{post.id}", json={"title": "Should Fail"})
+
+    assert response.status_code == 404

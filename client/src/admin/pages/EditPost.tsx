@@ -2,32 +2,25 @@ import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { CircularProgress, Typography } from '@mui/material'
 import PostForm from '../components/PostForm'
-import { usePost } from '../../hooks/usePost'
-
-const API_URL = import.meta.env.VITE_API_URL ?? ''
+import { usePost } from '../../hooks/admin/usePost'
 
 export default function EditPost() {
   const { postId } = useParams<{ postId: string }>()
   const navigate = useNavigate()
-  const { post, error: fetchError, loading: fetchLoading, fetchPost } = usePost()
+  const { post, error: fetchError, loading: fetchLoading, fetchData, update } = usePost()
   const [submitLoading, setSubmitLoading] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (postId) fetchPost(postId)
+    if (postId) fetchData(postId)
   }, [postId])
 
   async function handleSubmit(values: { title: string; body: string; state: string }) {
     setSubmitLoading(true)
     setSubmitError(null)
     try {
-      const res = await fetch(`${API_URL}/posts/${postId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(values),
-      })
-      if (!res.ok) throw new Error(`Server returned ${res.status}`)
-      navigate(`/admin/blogs/${post!.blog_id}`)
+      const updated = await update(postId!, values)
+      navigate(`/admin/blogs/${updated.blog_id}`)
     } catch (err) {
       setSubmitError((err as Error).message)
       setSubmitLoading(false)

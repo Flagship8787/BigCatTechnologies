@@ -10,6 +10,8 @@ import {
   Paper,
 } from '@mui/material'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import { usePost } from '../../hooks/admin/usePost'
 
 export default function PostDetails() {
@@ -66,10 +68,11 @@ export default function PostDetails() {
             Last updated: {new Date(post.updated_at).toLocaleString()}
           </Typography>
 
-          <Box
-            sx={{ mb: 3 }}
-            dangerouslySetInnerHTML={{ __html: post.body }}
-          />
+          <Box sx={{ mb: 3 }}>
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              {post.body}
+            </ReactMarkdown>
+          </Box>
 
           {publishError && (
             <Typography color="error" sx={{ mb: 2 }}>{publishError}</Typography>
