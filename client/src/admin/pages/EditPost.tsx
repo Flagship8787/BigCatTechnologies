@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { useAuth0 } from '@auth0/auth0-react'
 import { CircularProgress, Typography } from '@mui/material'
 import PostForm from '../components/PostForm'
 import { usePost } from '../../hooks/admin/usePost'
@@ -9,6 +10,7 @@ const API_URL = import.meta.env.VITE_API_URL ?? ''
 export default function EditPost() {
   const { postId } = useParams<{ postId: string }>()
   const navigate = useNavigate()
+  const { getAccessTokenSilently } = useAuth0()
   const { post, error: fetchError, loading: fetchLoading, fetchData } = usePost()
   const [submitLoading, setSubmitLoading] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
@@ -21,9 +23,13 @@ export default function EditPost() {
     setSubmitLoading(true)
     setSubmitError(null)
     try {
+      const token = await getAccessTokenSilently()
       const res = await fetch(`${API_URL}/admin/posts/${postId}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify(values),
       })
       if (!res.ok) throw new Error(`Server returned ${res.status}`)
