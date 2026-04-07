@@ -39,4 +39,5 @@ auth = OAuthProxy(
     client_storage=cache_storage,
     allowed_client_redirect_uris=["http://localhost", "http://127.0.0.1"],
     extra_authorize_params={"audience": os.environ['AUTH0_AUDIENCE']},
+    extra_token_params={"audience": os.environ['AUTH0_AUDIENCE']},
 )
