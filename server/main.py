@@ -18,9 +18,12 @@ mcp_app = mcp.http_app(path='/mcp', stateless_http=True)
 
 app = FastAPI(title='Big Cat Technologies', lifespan=mcp_app.lifespan)
 
+_default_origins = "https://bigcattechnologies.com,https://www.bigcattechnologies.com"
+_allowed_origins = os.getenv("ALLOWED_ORIGINS", _default_origins).split(",")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://bigcattechnologies.com", "https://www.bigcattechnologies.com"],
+    allow_origins=_allowed_origins,
     allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["Authorization", "Content-Type"],
 )
