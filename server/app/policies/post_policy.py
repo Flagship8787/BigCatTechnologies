@@ -10,7 +10,7 @@ class PostPolicy(BasePolicy):
     OWN_ACCESS = ("posts:admin:own",)
 
     def scope(self, action: str):
-        if action in ("publish", "get"):
+        if action in ("publish", "get", "update"):
             if self.has_permission(*self.FULL_ACCESS):
                 return select(Post)
             if self.has_permission(*self.OWN_ACCESS):
