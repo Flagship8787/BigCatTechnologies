@@ -183,7 +183,13 @@ resource "google_cloud_run_v2_service" "server" {
   ingress             = "INGRESS_TRAFFIC_ALL"
   deletion_protection = false
 
-  depends_on = [google_project_service.run]
+  depends_on = [
+    google_project_service.run,
+    google_secret_manager_secret_iam_member.cloud_run_server_db_password,
+    google_secret_manager_secret_iam_member.cloud_run_server_auth0_spa_client_secret,
+    google_secret_manager_secret_iam_member.cloud_run_server_auth0_mcp_client_secret,
+    google_secret_manager_secret_iam_member.cloud_run_server_redis_password,
+  ]
 
   # CI deploys new image revisions via gcloud — Terraform manages config only.
   lifecycle {
@@ -337,12 +343,6 @@ resource "google_cloud_run_v2_service" "server" {
     }
   }
 
-  depends_on = [
-    google_secret_manager_secret_iam_member.cloud_run_server_db_password,
-    google_secret_manager_secret_iam_member.cloud_run_server_auth0_spa_client_secret,
-    google_secret_manager_secret_iam_member.cloud_run_server_auth0_mcp_client_secret,
-    google_secret_manager_secret_iam_member.cloud_run_server_redis_password,
-  ]
 }
 
 # Allow unauthenticated invocations
