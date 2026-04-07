@@ -336,6 +336,13 @@ resource "google_cloud_run_v2_service" "server" {
       }
     }
   }
+
+  depends_on = [
+    google_secret_manager_secret_iam_member.cloud_run_server_db_password,
+    google_secret_manager_secret_iam_member.cloud_run_server_auth0_spa_client_secret,
+    google_secret_manager_secret_iam_member.cloud_run_server_auth0_mcp_client_secret,
+    google_secret_manager_secret_iam_member.cloud_run_server_redis_password,
+  ]
 }
 
 # Allow unauthenticated invocations
