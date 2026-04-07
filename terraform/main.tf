@@ -288,14 +288,27 @@ resource "google_cloud_run_v2_service" "server" {
         value = var.auth0_token_endpoint
       }
       env {
-        name  = "AUTH0_CLIENT_ID"
-        value = var.auth0_client_id
+        name  = "AUTH0_SPA_CLIENT_ID"
+        value = var.auth0_spa_client_id
       }
       env {
-        name = "AUTH0_CLIENT_SECRET"
+        name = "AUTH0_SPA_CLIENT_SECRET"
         value_source {
           secret_key_ref {
-            secret  = google_secret_manager_secret.auth0_client_secret.secret_id
+            secret  = google_secret_manager_secret.auth0_spa_client_secret.secret_id
+            version = "latest"
+          }
+        }
+      }
+      env {
+        name  = "AUTH0_MCP_CLIENT_ID"
+        value = var.auth0_mcp_client_id
+      }
+      env {
+        name = "AUTH0_MCP_CLIENT_SECRET"
+        value_source {
+          secret_key_ref {
+            secret  = google_secret_manager_secret.auth0_mcp_client_secret.secret_id
             version = "latest"
           }
         }
@@ -426,9 +439,9 @@ resource "google_secret_manager_secret_iam_member" "cloud_run_server_db_password
   member    = "serviceAccount:${google_service_account.cloud_run_server.email}"
 }
 
-# Store Auth0 client secret in Secret Manager
-resource "google_secret_manager_secret" "auth0_client_secret" {
-  secret_id  = "bigcat-auth0-client-secret"
+# Store Auth0 SPA client secret in Secret Manager
+resource "google_secret_manager_secret" "auth0_spa_client_secret" {
+  secret_id  = "bigcat-auth0-spa-client-secret"
   depends_on = [google_project_service.secretmanager]
 
   replication {
@@ -436,13 +449,34 @@ resource "google_secret_manager_secret" "auth0_client_secret" {
   }
 }
 
-resource "google_secret_manager_secret_version" "auth0_client_secret" {
-  secret      = google_secret_manager_secret.auth0_client_secret.id
-  secret_data = var.auth0_client_secret
+resource "google_secret_manager_secret_version" "auth0_spa_client_secret" {
+  secret      = google_secret_manager_secret.auth0_spa_client_secret.id
+  secret_data = var.auth0_spa_client_secret
 }
 
-resource "google_secret_manager_secret_iam_member" "cloud_run_server_auth0_client_secret" {
-  secret_id = google_secret_manager_secret.auth0_client_secret.id
+resource "google_secret_manager_secret_iam_member" "cloud_run_server_auth0_spa_client_secret" {
+  secret_id = google_secret_manager_secret.auth0_spa_client_secret.id
+  role      = "roles/secretmanager.secretAccessor"
+  member    = "serviceAccount:${google_service_account.cloud_run_server.email}"
+}
+
+# Store Auth0 MCP client secret in Secret Manager
+resource "google_secret_manager_secret" "auth0_mcp_client_secret" {
+  secret_id  = "bigcat-auth0-mcp-client-secret"
+  depends_on = [google_project_service.secretmanager]
+
+  replication {
+    auto {}
+  }
+}
+
+resource "google_secret_manager_secret_version" "auth0_mcp_client_secret" {
+  secret      = google_secret_manager_secret.auth0_mcp_client_secret.id
+  secret_data = var.auth0_mcp_client_secret
+}
+
+resource "google_secret_manager_secret_iam_member" "cloud_run_server_auth0_mcp_client_secret" {
+  secret_id = google_secret_manager_secret.auth0_mcp_client_secret.id
   role      = "roles/secretmanager.secretAccessor"
   member    = "serviceAccount:${google_service_account.cloud_run_server.email}"
 }

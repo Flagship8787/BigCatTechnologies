@@ -46,7 +46,7 @@ output "vite_auth0_domain" {
 
 output "vite_auth0_client_id" {
   description = "VITE_AUTH0_CLIENT_ID — GitHub Actions variable for the client Docker build"
-  value       = var.auth0_client_id
+  value       = var.auth0_spa_client_id
 }
 
 output "vite_auth0_audience" {
