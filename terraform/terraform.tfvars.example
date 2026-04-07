@@ -14,7 +14,8 @@ auth0_issuer         = "https://your-tenant.auth0.com/"
 auth0_audience       = "https://your-api-audience"
 auth0_auth_endpoint  = "https://your-tenant.auth0.com/authorize"
 auth0_token_endpoint = "https://your-tenant.auth0.com/oauth/token"
-auth0_client_id      = "your-auth0-client-id"
+auth0_spa_client_id  = "your-auth0-spa-client-id"      # Single Page Application (React frontend)
+auth0_mcp_client_id  = "your-auth0-mcp-client-id"      # Regular Web Application (MCP OAuth proxy)
 api_base_url         = "https://your-cloud-run-service-url"
 auth0_redirect_path  = "/oauth/callback"
 
@@ -24,7 +25,7 @@ auth0_redirect_path  = "/oauth/callback"
 #
 #   export TF_VAR_db_password="..."
 #   export TF_VAR_redis_password="..."
-#   export TF_VAR_auth0_client_secret="..."
+#   export TF_VAR_auth0_mcp_client_secret="..."
 #
 # Terraform automatically reads TF_VAR_* from the environment.
 # ---------------------------------------------------------------------------
