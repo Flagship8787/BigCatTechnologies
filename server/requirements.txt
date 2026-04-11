@@ -13,3 +13,4 @@ pydantic
 uvicorn
 factory_boy
 python-jose[cryptography]
+tweepy
