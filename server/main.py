@@ -8,7 +8,7 @@ from app.controllers import posts as posts_controller
 from app.controllers.admin import blogs as admin_blogs_controller
 from app.controllers.admin import posts as admin_posts_controller
 
-from app.mcp import tools as mcp_tools
+from app.mcp.posts import tools as mcp_tools
 from app.mcp.auth import auth
 
 mcp = FastMCP('Big Cat Technologies', auth=auth)
