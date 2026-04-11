@@ -1,8 +1,17 @@
-from fastmcp import FastMCP
+from typing import Optional
 
+from fastmcp import FastMCP
+from fastmcp.server.dependencies import get_access_token
+
+from app.auth.token import SessionToken
+from app.db import AsyncSessionLocal
 from app.domains.posts.create.operation import Operation as CreatePostInBlog
 from app.domains.posts.serializer import PostSerializer
 from app.mcp.posts.permissions import post_auth, POSTS_CREATE
+from app.models.post import Post
+from app.policies.post_policy import PostPolicy
+
+POSTS_READ = ("admin", "posts:admin", "posts:admin:own")
 
 
 def register(mcp: FastMCP):
@@ -17,4 +26,30 @@ def register(mcp: FastMCP):
     async def create_post_in_blog(blog_id: str, title: str, body: str) -> dict:
         """Create a new drafted post in the specified blog."""
         post = await CreatePostInBlog().perform(blog_id=blog_id, title=title, body=body)
+        return PostSerializer(post).to_json()
+
+    @mcp.tool(auth=post_auth(*POSTS_READ))
+    async def get_posts(blog_id: Optional[str] = None) -> list:
+        """List posts. Optionally filter by blog_id."""
+        access_token = get_access_token()
+        policy = PostPolicy(token=SessionToken(**access_token.claims))
+        query = policy.scope("get")
+        if blog_id is not None:
+            query = query.where(Post.blog_id == blog_id)
+        async with AsyncSessionLocal() as db:
+            result = await db.execute(query)
+            posts = result.scalars().all()
+        return [PostSerializer(post).to_json() for post in posts]
+
+    @mcp.tool(auth=post_auth(*POSTS_READ))
+    async def get_post(post_id: str) -> dict:
+        """Get a single post by ID."""
+        access_token = get_access_token()
+        policy = PostPolicy(token=SessionToken(**access_token.claims))
+        query = policy.scope("get").where(Post.id == post_id)
+        async with AsyncSessionLocal() as db:
+            result = await db.execute(query)
+            post = result.scalars().first()
+        if post is None:
+            raise ValueError(f"Post {post_id} not found")
         return PostSerializer(post).to_json()
