@@ -1,3 +1,4 @@
+import logging
 import os
 import uuid
 
@@ -6,9 +7,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domains.common.operation.base_operation import BaseOperation
 from app.domains.common.operation.base_validator import BaseValidator
+from app.domains.posts.tweet.errors import TweetCreationError
 from app.domains.posts.tweet.validator import Validator
 from app.models.post import Post
 from app.models.tweet import Tweet
+
+logger = logging.getLogger(__name__)
 
 
 class Operation(BaseOperation):
@@ -29,7 +33,13 @@ class Operation(BaseOperation):
             access_token=os.environ["X_ACCESS_TOKEN"],
             access_token_secret=os.environ["X_ACCESS_TOKEN_SECRET"],
         )
-        response = client.create_tweet(text=tweet_text)
+        try:
+            response = client.create_tweet(text=tweet_text)
+        except tweepy.TweepyException as e:
+            logger.error("Failed to create tweet for post %s: %s", post.id, e)
+            raise TweetCreationError(f"Failed to create tweet for post {post.id}: {e}") from e
+
+        logger.info("Tweepy response for post %s: %s", post.id, response)
         tweet_id = response.data["id"]
         url = f"https://x.com/i/web/status/{tweet_id}"
 

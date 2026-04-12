@@ -17,6 +17,6 @@ class Validator(BaseValidator):
             return len(self.errors) == 0
 
         if self.post.state != PostState.published.value:
-            self._add_error("state", "Post must be published to tweet")
+            self._add_error("state", f"Post {self.post.id} must be published to tweet (current state: {self.post.state})")
 
         return len(self.errors) == 0

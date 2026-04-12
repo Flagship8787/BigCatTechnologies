@@ -26,6 +26,7 @@ def upgrade() -> None:
         sa.Column('tweet_id', sa.String(255), nullable=False),
         sa.Column('url', sa.String(500), nullable=False),
         sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
+        sa.Column('updated_at', sa.DateTime(timezone=True), nullable=False),
     )
 
     op.create_index('ix_tweets_post_id', 'tweets', ['post_id'])
