@@ -2,6 +2,7 @@ import pytest
 import httpx
 from fastapi import FastAPI
 from sqlalchemy.ext.asyncio import AsyncSession
+from unittest.mock import MagicMock, patch
 
 from app.auth.dependencies import require_auth0_token
 from app.auth.token import SessionToken
@@ -9,6 +10,12 @@ from app.db import get_db
 from app.controllers.admin.posts import register as register_admin_posts
 from app.models.post import PostState
 from tests.conftest import create_blog, create_post
+
+
+def _make_tweepy_response(tweet_id: str) -> MagicMock:
+    response = MagicMock()
+    response.data = {"id": tweet_id}
+    return response
 
 
 def _make_admin_posts_app(db_session: AsyncSession, permissions: list) -> FastAPI:
@@ -56,6 +63,16 @@ def posts_admin_posts_app(db_session: AsyncSession) -> FastAPI:
 @pytest.fixture
 def own_scope_posts_app(db_session: AsyncSession) -> FastAPI:
     return _make_admin_posts_app(db_session, permissions=["posts:admin:own"])
+
+
+@pytest.fixture
+def tweet_full_posts_app(db_session: AsyncSession) -> FastAPI:
+    return _make_admin_posts_app(db_session, permissions=["posts:publish:tweet"])
+
+
+@pytest.fixture
+def tweet_own_posts_app(db_session: AsyncSession) -> FastAPI:
+    return _make_admin_posts_app(db_session, permissions=["posts:publish:tweet:own"])
 
 
 # ============================================================
@@ -470,3 +487,184 @@ async def test_update_post_returns_404_with_own_permission_for_other_users_blog(
         response = await client.patch(f"/admin/posts/{post.id}", json={"title": "Should Fail"})
 
     assert response.status_code == 404
+
+
+# ============================================================
+# POST /admin/posts/{post_id}/tweet
+# ============================================================
+
+_TWEEPY_ENV = {
+    "X_API_KEY": "key",
+    "X_API_KEY_SECRET": "key_secret",
+    "X_ACCESS_TOKEN": "token",
+    "X_ACCESS_TOKEN_SECRET": "token_secret",
+}
+
+# --- Auth / authz ---
+
+@pytest.mark.asyncio
+async def test_tweet_post_returns_401_without_auth_token(unauthed_posts_app: FastAPI, db_session: AsyncSession):
+    blog = await create_blog(db_session)
+    post = await create_post(db_session, blog=blog, state=PostState.published.value)
+
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=unauthed_posts_app), base_url="http://test"
+    ) as client:
+        response = await client.post(f"/admin/posts/{post.id}/tweet")
+
+    assert response.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_tweet_post_returns_403_without_valid_scope(no_scope_posts_app: FastAPI, db_session: AsyncSession):
+    blog = await create_blog(db_session)
+    post = await create_post(db_session, blog=blog, state=PostState.published.value)
+
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=no_scope_posts_app), base_url="http://test"
+    ) as client:
+        response = await client.post(f"/admin/posts/{post.id}/tweet")
+
+    assert response.status_code == 403
+
+
+@pytest.mark.asyncio
+async def test_tweet_post_returns_403_with_only_own_admin_scope(own_scope_posts_app: FastAPI, db_session: AsyncSession):
+    blog = await create_blog(db_session, owner_id="auth0|test123")
+    post = await create_post(db_session, blog=blog, state=PostState.published.value)
+
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=own_scope_posts_app), base_url="http://test"
+    ) as client:
+        response = await client.post(f"/admin/posts/{post.id}/tweet")
+
+    assert response.status_code == 403
+
+
+# --- Not found ---
+
+@pytest.mark.asyncio
+async def test_tweet_post_returns_404_for_unknown_post(admin_posts_app: FastAPI):
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=admin_posts_app), base_url="http://test"
+    ) as client:
+        response = await client.post("/admin/posts/nonexistent-id/tweet")
+
+    assert response.status_code == 404
+
+
+# --- State validation ---
+
+@pytest.mark.asyncio
+async def test_tweet_post_returns_422_when_post_is_not_published(admin_posts_app: FastAPI, db_session: AsyncSession):
+    blog = await create_blog(db_session)
+    post = await create_post(db_session, blog=blog, state=PostState.drafted.value)
+
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=admin_posts_app), base_url="http://test"
+    ) as client:
+        response = await client.post(f"/admin/posts/{post.id}/tweet")
+
+    assert response.status_code == 422
+    assert post.id in response.json()["detail"]
+    assert PostState.drafted.value in response.json()["detail"]
+
+
+# --- Success cases ---
+
+@pytest.mark.asyncio
+async def test_tweet_post_returns_200_with_admin_permission(admin_posts_app: FastAPI, db_session: AsyncSession):
+    blog = await create_blog(db_session)
+    post = await create_post(db_session, blog=blog, state=PostState.published.value)
+
+    mock_client = MagicMock()
+    mock_client.create_tweet.return_value = _make_tweepy_response("111")
+
+    with patch("app.domains.posts.tweet.operation.tweepy.Client", return_value=mock_client):
+        with patch.dict("os.environ", _TWEEPY_ENV):
+            async with httpx.AsyncClient(
+                transport=httpx.ASGITransport(app=admin_posts_app), base_url="http://test"
+            ) as client:
+                response = await client.post(f"/admin/posts/{post.id}/tweet")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["tweet_id"] == "111"
+    assert "x.com" in body["url"]
+
+
+@pytest.mark.asyncio
+async def test_tweet_post_returns_200_with_posts_publish_tweet_permission(
+    tweet_full_posts_app: FastAPI, db_session: AsyncSession
+):
+    blog = await create_blog(db_session)
+    post = await create_post(db_session, blog=blog, state=PostState.published.value)
+
+    mock_client = MagicMock()
+    mock_client.create_tweet.return_value = _make_tweepy_response("222")
+
+    with patch("app.domains.posts.tweet.operation.tweepy.Client", return_value=mock_client):
+        with patch.dict("os.environ", _TWEEPY_ENV):
+            async with httpx.AsyncClient(
+                transport=httpx.ASGITransport(app=tweet_full_posts_app), base_url="http://test"
+            ) as client:
+                response = await client.post(f"/admin/posts/{post.id}/tweet")
+
+    assert response.status_code == 200
+    assert response.json()["tweet_id"] == "222"
+
+
+@pytest.mark.asyncio
+async def test_tweet_post_returns_200_with_own_permission_for_own_blog(
+    tweet_own_posts_app: FastAPI, db_session: AsyncSession
+):
+    blog = await create_blog(db_session, owner_id="auth0|test123")
+    post = await create_post(db_session, blog=blog, state=PostState.published.value)
+
+    mock_client = MagicMock()
+    mock_client.create_tweet.return_value = _make_tweepy_response("333")
+
+    with patch("app.domains.posts.tweet.operation.tweepy.Client", return_value=mock_client):
+        with patch.dict("os.environ", _TWEEPY_ENV):
+            async with httpx.AsyncClient(
+                transport=httpx.ASGITransport(app=tweet_own_posts_app), base_url="http://test"
+            ) as client:
+                response = await client.post(f"/admin/posts/{post.id}/tweet")
+
+    assert response.status_code == 200
+    assert response.json()["tweet_id"] == "333"
+
+
+@pytest.mark.asyncio
+async def test_tweet_post_returns_404_with_own_permission_for_other_users_blog(
+    tweet_own_posts_app: FastAPI, db_session: AsyncSession
+):
+    blog = await create_blog(db_session, owner_id="auth0|someone-else")
+    post = await create_post(db_session, blog=blog, state=PostState.published.value)
+
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=tweet_own_posts_app), base_url="http://test"
+    ) as client:
+        response = await client.post(f"/admin/posts/{post.id}/tweet")
+
+    assert response.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_tweet_post_returns_502_when_tweepy_fails(admin_posts_app: FastAPI, db_session: AsyncSession):
+    import tweepy
+
+    blog = await create_blog(db_session)
+    post = await create_post(db_session, blog=blog, state=PostState.published.value)
+
+    mock_client = MagicMock()
+    mock_client.create_tweet.side_effect = tweepy.TweepyException("API error")
+
+    with patch("app.domains.posts.tweet.operation.tweepy.Client", return_value=mock_client):
+        with patch.dict("os.environ", _TWEEPY_ENV):
+            async with httpx.AsyncClient(
+                transport=httpx.ASGITransport(app=admin_posts_app), base_url="http://test"
+            ) as client:
+                response = await client.post(f"/admin/posts/{post.id}/tweet")
+
+    assert response.status_code == 502

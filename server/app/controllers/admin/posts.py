@@ -8,6 +8,8 @@ from app.auth.dependencies import get_post_policy
 from app.db import get_db
 from app.domains.common.operation.errors import ValidationError
 from app.domains.posts.publish.operation import Operation as PublishOperation
+from app.domains.posts.tweet.errors import TweetCreationError
+from app.domains.posts.tweet.operation import Operation as TweetOperation
 from app.domains.posts.update.operation import Operation as UpdateOperation
 from app.domains.posts.serializer import PostSerializer
 from app.models.post import Post
@@ -74,3 +76,24 @@ def register(app: FastAPI):
             detail = state_errors[0] if state_errors else "Invalid post state"
             raise HTTPException(status_code=422, detail=detail)
         return PostSerializer(published_post).to_json()
+
+    @app.post("/admin/posts/{post_id}/tweet")
+    async def tweet_post(
+        post_id: str,
+        db: AsyncSession = Depends(get_db),
+        policy: PostPolicy = Depends(get_post_policy),
+    ):
+        query = policy.scope("tweet").where(Post.id == post_id)
+        result = await db.execute(query)
+        post = result.scalar_one_or_none()
+        if post is None:
+            raise HTTPException(status_code=404, detail="Post not found")
+        try:
+            tweet = await TweetOperation().perform_in(db, post=post)
+            return {"id": tweet.id, "tweet_id": tweet.tweet_id, "url": tweet.url}
+        except ValidationError as e:
+            all_errors = [msg for msgs in e.errors.values() for msg in msgs]
+            detail = all_errors[0] if all_errors else "Invalid request"
+            raise HTTPException(status_code=422, detail=detail)
+        except TweetCreationError as e:
+            raise HTTPException(status_code=502, detail=str(e))

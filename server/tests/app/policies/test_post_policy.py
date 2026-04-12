@@ -170,3 +170,71 @@ class TestPostPolicyScopeUpdate:
         policy = make_policy("auth0|admin", ["admin"])
         with pytest.raises(NotAuthorized):
             policy.scope("delete")
+
+
+# --- scope("tweet") ---
+
+class TestPostPolicyScopeTweet:
+
+    @pytest.mark.asyncio
+    async def test_admin_permission_returns_select_post(self, db_session: AsyncSession):
+        post = await create_post(db_session)
+        policy = make_policy("auth0|admin", ["admin"])
+        query = policy.scope("tweet").where(Post.id == post.id)
+        result = await db_session.execute(query)
+        found = result.scalar_one_or_none()
+        assert found is not None
+        assert found.id == post.id
+
+    @pytest.mark.asyncio
+    async def test_posts_admin_permission_returns_select_post(self, db_session: AsyncSession):
+        post = await create_post(db_session)
+        policy = make_policy("auth0|editor", ["posts:admin"])
+        query = policy.scope("tweet").where(Post.id == post.id)
+        result = await db_session.execute(query)
+        found = result.scalar_one_or_none()
+        assert found is not None
+        assert found.id == post.id
+
+    @pytest.mark.asyncio
+    async def test_posts_publish_tweet_permission_returns_select_post(self, db_session: AsyncSession):
+        post = await create_post(db_session)
+        policy = make_policy("auth0|publisher", ["posts:publish:tweet"])
+        query = policy.scope("tweet").where(Post.id == post.id)
+        result = await db_session.execute(query)
+        found = result.scalar_one_or_none()
+        assert found is not None
+        assert found.id == post.id
+
+    @pytest.mark.asyncio
+    async def test_posts_publish_tweet_own_permission_returns_own_post(self, db_session: AsyncSession):
+        blog = await create_blog(db_session, owner_id="auth0|user1")
+        post = await create_post(db_session, blog=blog)
+        policy = make_policy("auth0|user1", ["posts:publish:tweet:own"])
+        query = policy.scope("tweet").where(Post.id == post.id)
+        result = await db_session.execute(query)
+        found = result.scalar_one_or_none()
+        assert found is not None
+        assert found.id == post.id
+
+    @pytest.mark.asyncio
+    async def test_posts_publish_tweet_own_permission_excludes_other_users_posts(self, db_session: AsyncSession):
+        blog = await create_blog(db_session, owner_id="auth0|someone-else")
+        post = await create_post(db_session, blog=blog)
+        policy = make_policy("auth0|user1", ["posts:publish:tweet:own"])
+        query = policy.scope("tweet").where(Post.id == post.id)
+        result = await db_session.execute(query)
+        found = result.scalar_one_or_none()
+        assert found is None
+
+    @pytest.mark.asyncio
+    async def test_no_permissions_raises_not_authorized(self, db_session: AsyncSession):
+        policy = make_policy("auth0|user1", [])
+        with pytest.raises(NotAuthorized):
+            policy.scope("tweet")
+
+    @pytest.mark.asyncio
+    async def test_unrecognized_permission_raises_not_authorized(self, db_session: AsyncSession):
+        policy = make_policy("auth0|user1", ["posts:admin:own"])
+        with pytest.raises(NotAuthorized):
+            policy.scope("tweet")
