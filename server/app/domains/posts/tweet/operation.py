@@ -1,12 +1,14 @@
 import os
+import uuid
 
 import tweepy
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domains.common.operation.base_operation import BaseOperation
 from app.domains.common.operation.base_validator import BaseValidator
-from app.domains.posts.share_x.validator import Validator
+from app.domains.posts.tweet.validator import Validator
 from app.models.post import Post
+from app.models.tweet import Tweet
 
 
 class Operation(BaseOperation):
@@ -15,7 +17,7 @@ class Operation(BaseOperation):
     def _validator(self, post: Post) -> BaseValidator:
         return Validator(post=post)
 
-    async def _do_perform(self, db: AsyncSession, post: Post) -> dict:
+    async def _do_perform(self, db: AsyncSession, post: Post) -> Tweet:
         tweet_text = (
             f'"{post.title}\n\n{post.body[:200]}\n\n'
             f'https://bigcattechnologies.com/blog/posts/{post.id}"'
@@ -29,8 +31,16 @@ class Operation(BaseOperation):
         )
         response = client.create_tweet(text=tweet_text)
         tweet_id = response.data["id"]
+        url = f"https://x.com/i/web/status/{tweet_id}"
 
-        return {
-            "tweet_id": tweet_id,
-            "url": f"https://x.com/i/web/status/{tweet_id}",
-        }
+        tweet = Tweet(
+            id=str(uuid.uuid4()),
+            post_id=post.id,
+            tweet_id=tweet_id,
+            url=url,
+        )
+        db.add(tweet)
+        await db.commit()
+        await db.refresh(tweet)
+
+        return tweet

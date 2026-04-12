@@ -8,7 +8,7 @@ from app.auth.dependencies import get_post_policy
 from app.db import get_db
 from app.domains.common.operation.errors import ValidationError
 from app.domains.posts.publish.operation import Operation as PublishOperation
-from app.domains.posts.share_x.operation import Operation as ShareXOperation
+from app.domains.posts.tweet.operation import Operation as TweetOperation
 from app.domains.posts.update.operation import Operation as UpdateOperation
 from app.domains.posts.serializer import PostSerializer
 from app.models.post import Post
@@ -76,8 +76,8 @@ def register(app: FastAPI):
             raise HTTPException(status_code=422, detail=detail)
         return PostSerializer(published_post).to_json()
 
-    @app.post("/admin/posts/{post_id}/share/x")
-    async def share_post_to_x(
+    @app.post("/admin/posts/{post_id}/tweet")
+    async def tweet_post(
         post_id: str,
         db: AsyncSession = Depends(get_db),
         policy: PostPolicy = Depends(get_post_policy),
@@ -88,7 +88,8 @@ def register(app: FastAPI):
         if post is None:
             raise HTTPException(status_code=404, detail="Post not found")
         try:
-            return await ShareXOperation().perform_in(db, post=post)
+            tweet = await TweetOperation().perform_in(db, post=post)
+            return {"id": tweet.id, "tweet_id": tweet.tweet_id, "url": tweet.url}
         except ValidationError as e:
             all_errors = [msg for msgs in e.errors.values() for msg in msgs]
             detail = all_errors[0] if all_errors else "Invalid request"
