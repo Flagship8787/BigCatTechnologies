@@ -189,6 +189,10 @@ resource "google_cloud_run_v2_service" "server" {
     google_secret_manager_secret_iam_member.cloud_run_server_auth0_spa_client_secret,
     google_secret_manager_secret_iam_member.cloud_run_server_auth0_mcp_client_secret,
     google_secret_manager_secret_iam_member.cloud_run_server_redis_password,
+    google_secret_manager_secret_iam_member.cloud_run_server_x_api_key,
+    google_secret_manager_secret_iam_member.cloud_run_server_x_api_key_secret,
+    google_secret_manager_secret_iam_member.cloud_run_server_x_access_token,
+    google_secret_manager_secret_iam_member.cloud_run_server_x_access_token_secret,
   ]
 
   # CI deploys new image revisions via gcloud — Terraform manages config only.
@@ -326,6 +330,44 @@ resource "google_cloud_run_v2_service" "server" {
       env {
         name  = "AUTH0_REDIRECT_PATH"
         value = var.auth0_redirect_path
+      }
+
+      # X (Twitter) API credentials
+      env {
+        name = "X_API_KEY"
+        value_source {
+          secret_key_ref {
+            secret  = google_secret_manager_secret.x_api_key.secret_id
+            version = "latest"
+          }
+        }
+      }
+      env {
+        name = "X_API_KEY_SECRET"
+        value_source {
+          secret_key_ref {
+            secret  = google_secret_manager_secret.x_api_key_secret.secret_id
+            version = "latest"
+          }
+        }
+      }
+      env {
+        name = "X_ACCESS_TOKEN"
+        value_source {
+          secret_key_ref {
+            secret  = google_secret_manager_secret.x_access_token.secret_id
+            version = "latest"
+          }
+        }
+      }
+      env {
+        name = "X_ACCESS_TOKEN_SECRET"
+        value_source {
+          secret_key_ref {
+            secret  = google_secret_manager_secret.x_access_token_secret.secret_id
+            version = "latest"
+          }
+        }
       }
 
       volume_mounts {
@@ -505,6 +547,90 @@ resource "google_secret_manager_secret_version" "redis_password" {
 
 resource "google_secret_manager_secret_iam_member" "cloud_run_server_redis_password" {
   secret_id = google_secret_manager_secret.redis_password.id
+  role      = "roles/secretmanager.secretAccessor"
+  member    = "serviceAccount:${google_service_account.cloud_run_server.email}"
+}
+
+# Store X API key in Secret Manager
+resource "google_secret_manager_secret" "x_api_key" {
+  secret_id  = "bigcat-x-api-key"
+  depends_on = [google_project_service.secretmanager]
+
+  replication {
+    auto {}
+  }
+}
+
+resource "google_secret_manager_secret_version" "x_api_key" {
+  secret      = google_secret_manager_secret.x_api_key.id
+  secret_data = var.x_api_key
+}
+
+resource "google_secret_manager_secret_iam_member" "cloud_run_server_x_api_key" {
+  secret_id = google_secret_manager_secret.x_api_key.id
+  role      = "roles/secretmanager.secretAccessor"
+  member    = "serviceAccount:${google_service_account.cloud_run_server.email}"
+}
+
+# Store X API key secret in Secret Manager
+resource "google_secret_manager_secret" "x_api_key_secret" {
+  secret_id  = "bigcat-x-api-key-secret"
+  depends_on = [google_project_service.secretmanager]
+
+  replication {
+    auto {}
+  }
+}
+
+resource "google_secret_manager_secret_version" "x_api_key_secret" {
+  secret      = google_secret_manager_secret.x_api_key_secret.id
+  secret_data = var.x_api_key_secret
+}
+
+resource "google_secret_manager_secret_iam_member" "cloud_run_server_x_api_key_secret" {
+  secret_id = google_secret_manager_secret.x_api_key_secret.id
+  role      = "roles/secretmanager.secretAccessor"
+  member    = "serviceAccount:${google_service_account.cloud_run_server.email}"
+}
+
+# Store X access token in Secret Manager
+resource "google_secret_manager_secret" "x_access_token" {
+  secret_id  = "bigcat-x-access-token"
+  depends_on = [google_project_service.secretmanager]
+
+  replication {
+    auto {}
+  }
+}
+
+resource "google_secret_manager_secret_version" "x_access_token" {
+  secret      = google_secret_manager_secret.x_access_token.id
+  secret_data = var.x_access_token
+}
+
+resource "google_secret_manager_secret_iam_member" "cloud_run_server_x_access_token" {
+  secret_id = google_secret_manager_secret.x_access_token.id
+  role      = "roles/secretmanager.secretAccessor"
+  member    = "serviceAccount:${google_service_account.cloud_run_server.email}"
+}
+
+# Store X access token secret in Secret Manager
+resource "google_secret_manager_secret" "x_access_token_secret" {
+  secret_id  = "bigcat-x-access-token-secret"
+  depends_on = [google_project_service.secretmanager]
+
+  replication {
+    auto {}
+  }
+}
+
+resource "google_secret_manager_secret_version" "x_access_token_secret" {
+  secret      = google_secret_manager_secret.x_access_token_secret.id
+  secret_data = var.x_access_token_secret
+}
+
+resource "google_secret_manager_secret_iam_member" "cloud_run_server_x_access_token_secret" {
+  secret_id = google_secret_manager_secret.x_access_token_secret.id
   role      = "roles/secretmanager.secretAccessor"
   member    = "serviceAccount:${google_service_account.cloud_run_server.email}"
 }

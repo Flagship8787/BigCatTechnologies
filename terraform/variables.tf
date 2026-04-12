@@ -95,6 +95,30 @@ variable "auth0_mcp_client_secret" {
   sensitive   = true
 }
 
+variable "x_api_key" {
+  description = "X (Twitter) API key"
+  type        = string
+  sensitive   = true
+}
+
+variable "x_api_key_secret" {
+  description = "X (Twitter) API key secret"
+  type        = string
+  sensitive   = true
+}
+
+variable "x_access_token" {
+  description = "X (Twitter) access token"
+  type        = string
+  sensitive   = true
+}
+
+variable "x_access_token_secret" {
+  description = "X (Twitter) access token secret"
+  type        = string
+  sensitive   = true
+}
+
 variable "api_base_url" {
   description = "Public base URL of the API (used for OAuth redirect)"
   type        = string
