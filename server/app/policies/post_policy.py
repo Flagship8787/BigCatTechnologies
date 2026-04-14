@@ -21,10 +21,15 @@ class PostPolicy(BasePolicy):
 
         if action == "get":
             if self.has_permission(*self.FULL_ACCESS):
+                # Full admin: all posts
                 return select(Post)
             if self.has_permission(*self.OWN_ACCESS):
-                return select(Post).join(Blog).where(Blog.owner_id == self.user_id)
-            # No read permissions — return only published posts (public read)
+                # Own access: published posts + own drafts
+                return select(Post).outerjoin(Blog).where(
+                    (Post.state == PostState.published.value) |
+                    (Blog.owner_id == self.user_id)
+                )
+            # No permissions: published posts only (public read)
             return select(Post).where(Post.state == PostState.published.value)
 
         if action == "tweet":
