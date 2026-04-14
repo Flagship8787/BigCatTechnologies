@@ -19,9 +19,24 @@ interface BlogData {
   posts: Post[]
 }
 
+function stripMarkdown(text: string): string {
+  return text
+    .replace(/^#{1,6}\s+/gm, '')      // headings
+    .replace(/\*\*(.+?)\*\*/g, '$1')  // bold
+    .replace(/\*(.+?)\*/g, '$1')      // italic
+    .replace(/`{1,3}[^`]*`{1,3}/g, '') // inline/block code
+    .replace(/^\s*[-*+]\s+/gm, '')    // unordered list markers
+    .replace(/^\s*\d+\.\s+/gm, '')    // ordered list markers
+    .replace(/^\s*[-*_]{3,}\s*$/gm, '') // horizontal rules
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1') // links → label only
+    .replace(/\n{2,}/g, '\n')         // collapse blank lines
+    .trim()
+}
+
 function PostPreview({ post }: { post: Post }) {
   const { formatDate } = useFormatDate()
-  const preview = post.body.length > 280 ? post.body.slice(0, 280).trimEnd() + '…' : post.body
+  const plain = stripMarkdown(post.body)
+  const preview = plain.length > 280 ? plain.slice(0, 280).trimEnd() + '…' : plain
 
   return (
     <article className="blog-post-preview">
