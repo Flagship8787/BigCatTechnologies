@@ -114,6 +114,78 @@ class TestPostPolicyScopePublish:
         assert other_post.id not in ids
 
 
+# --- scope("get") ---
+
+class TestPostPolicyScopeGet:
+
+    @pytest.mark.asyncio
+    async def test_admin_permission_returns_all_posts(self, db_session: AsyncSession):
+        post = await create_post(db_session)
+        policy = make_policy("auth0|admin", ["admin"])
+        query = policy.scope("get").where(Post.id == post.id)
+        result = await db_session.execute(query)
+        found = result.scalar_one_or_none()
+        assert found is not None
+
+    @pytest.mark.asyncio
+    async def test_posts_admin_permission_returns_all_posts(self, db_session: AsyncSession):
+        post = await create_post(db_session)
+        policy = make_policy("auth0|editor", ["posts:admin"])
+        query = policy.scope("get").where(Post.id == post.id)
+        result = await db_session.execute(query)
+        found = result.scalar_one_or_none()
+        assert found is not None
+
+    @pytest.mark.asyncio
+    async def test_own_permission_scopes_to_own_posts(self, db_session: AsyncSession):
+        blog = await create_blog(db_session, owner_id="auth0|user1")
+        post = await create_post(db_session, blog=blog)
+        policy = make_policy("auth0|user1", ["posts:admin:own"])
+        query = policy.scope("get").where(Post.id == post.id)
+        result = await db_session.execute(query)
+        found = result.scalar_one_or_none()
+        assert found is not None
+
+    @pytest.mark.asyncio
+    async def test_own_permission_excludes_other_users_posts(self, db_session: AsyncSession):
+        blog = await create_blog(db_session, owner_id="auth0|someone-else")
+        post = await create_post(db_session, blog=blog)
+        policy = make_policy("auth0|user1", ["posts:admin:own"])
+        query = policy.scope("get").where(Post.id == post.id)
+        result = await db_session.execute(query)
+        found = result.scalar_one_or_none()
+        assert found is None
+
+    @pytest.mark.asyncio
+    async def test_no_permissions_returns_only_published_posts(self, db_session: AsyncSession):
+        published_post = await create_post(db_session, state="published")
+        drafted_post = await create_post(db_session, state="drafted")
+        policy = make_policy("", [])
+        query = policy.scope("get")
+        result = await db_session.execute(query)
+        ids = {r.id for r in result.scalars().all()}
+        assert published_post.id in ids
+        assert drafted_post.id not in ids
+
+    @pytest.mark.asyncio
+    async def test_unrecognized_permission_returns_only_published_posts(self, db_session: AsyncSession):
+        published_post = await create_post(db_session, state="published")
+        drafted_post = await create_post(db_session, state="drafted")
+        policy = make_policy("auth0|user1", ["read:profile"])
+        query = policy.scope("get")
+        result = await db_session.execute(query)
+        ids = {r.id for r in result.scalars().all()}
+        assert published_post.id in ids
+        assert drafted_post.id not in ids
+
+    @pytest.mark.asyncio
+    async def test_no_permissions_does_not_raise(self, db_session: AsyncSession):
+        policy = make_policy("", [])
+        # Should NOT raise NotAuthorized — falls back to published-only
+        query = policy.scope("get")
+        assert query is not None
+
+
 # --- scope("update") ---
 
 class TestPostPolicyScopeUpdate:

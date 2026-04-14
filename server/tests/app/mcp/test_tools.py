@@ -117,7 +117,10 @@ class TestGetPosts:
             mcp = MagicMock()
             registered_tools = {}
 
-            def capture_tool(auth=None):
+            def capture_tool(fn_or_auth=None, **kwargs):
+                if callable(fn_or_auth):
+                    registered_tools[fn_or_auth.__name__] = fn_or_auth
+                    return fn_or_auth
                 def decorator(fn):
                     registered_tools[fn.__name__] = fn
                     return fn
@@ -157,7 +160,10 @@ class TestGetPosts:
             mcp = MagicMock()
             registered_tools = {}
 
-            def capture_tool(auth=None):
+            def capture_tool(fn_or_auth=None, **kwargs):
+                if callable(fn_or_auth):
+                    registered_tools[fn_or_auth.__name__] = fn_or_auth
+                    return fn_or_auth
                 def decorator(fn):
                     registered_tools[fn.__name__] = fn
                     return fn
@@ -193,7 +199,10 @@ class TestGetPosts:
             mcp = MagicMock()
             registered_tools = {}
 
-            def capture_tool(auth=None):
+            def capture_tool(fn_or_auth=None, **kwargs):
+                if callable(fn_or_auth):
+                    registered_tools[fn_or_auth.__name__] = fn_or_auth
+                    return fn_or_auth
                 def decorator(fn):
                     registered_tools[fn.__name__] = fn
                     return fn
@@ -242,7 +251,10 @@ class TestGetPost:
             mcp = MagicMock()
             registered_tools = {}
 
-            def capture_tool(auth=None):
+            def capture_tool(fn_or_auth=None, **kwargs):
+                if callable(fn_or_auth):
+                    registered_tools[fn_or_auth.__name__] = fn_or_auth
+                    return fn_or_auth
                 def decorator(fn):
                     registered_tools[fn.__name__] = fn
                     return fn
@@ -279,7 +291,10 @@ class TestGetPost:
             mcp = MagicMock()
             registered_tools = {}
 
-            def capture_tool(auth=None):
+            def capture_tool(fn_or_auth=None, **kwargs):
+                if callable(fn_or_auth):
+                    registered_tools[fn_or_auth.__name__] = fn_or_auth
+                    return fn_or_auth
                 def decorator(fn):
                     registered_tools[fn.__name__] = fn
                     return fn
@@ -308,7 +323,10 @@ class TestUpdatePost:
         mcp = MagicMock()
         registered_tools = {}
 
-        def capture_tool(auth=None):
+        def capture_tool(fn_or_auth=None, **kwargs):
+            if callable(fn_or_auth):
+                registered_tools[fn_or_auth.__name__] = fn_or_auth
+                return fn_or_auth
             def decorator(fn):
                 registered_tools[fn.__name__] = fn
                 return fn

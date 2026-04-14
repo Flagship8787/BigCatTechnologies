@@ -95,16 +95,32 @@ async def test_get_post_returns_401_without_auth_token(unauthed_posts_app: FastA
 
 
 @pytest.mark.asyncio
-async def test_get_post_returns_403_without_valid_scope(no_scope_posts_app: FastAPI, db_session: AsyncSession):
+async def test_get_post_returns_404_for_drafted_post_without_valid_scope(no_scope_posts_app: FastAPI, db_session: AsyncSession):
+    """Without admin scope, the policy returns only published posts.
+    A drafted post is not in scope, so the endpoint returns 404."""
     blog = await create_blog(db_session)
-    post = await create_post(db_session, blog=blog)
+    post = await create_post(db_session, blog=blog, state="drafted")
 
     async with httpx.AsyncClient(
         transport=httpx.ASGITransport(app=no_scope_posts_app), base_url="http://test"
     ) as client:
         response = await client.get(f"/admin/posts/{post.id}")
 
-    assert response.status_code == 403
+    assert response.status_code == 404
+
+@pytest.mark.asyncio
+async def test_get_post_returns_published_post_without_valid_scope(no_scope_posts_app: FastAPI, db_session: AsyncSession):
+    """Without admin scope, published posts are still readable (public read)."""
+    blog = await create_blog(db_session)
+    post = await create_post(db_session, blog=blog, state="published")
+
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=no_scope_posts_app), base_url="http://test"
+    ) as client:
+        response = await client.get(f"/admin/posts/{post.id}")
+
+    assert response.status_code == 200
+    assert response.json()["id"] == post.id
 
 
 # --- Not found ---

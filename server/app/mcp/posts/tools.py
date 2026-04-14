@@ -30,11 +30,13 @@ def register(mcp: FastMCP):
         post = await CreatePostInBlog().perform(blog_id=blog_id, title=title, body=body)
         return PostSerializer(post).to_json()
 
-    @mcp.tool(auth=post_auth(*POSTS_READ))
+    @mcp.tool
     async def get_posts(blog_id: Optional[str] = None) -> list:
-        """List posts. Optionally filter by blog_id."""
+        """List posts. Returns only published posts for unauthenticated callers.
+        Authenticated callers with read permissions see all posts."""
         access_token = get_access_token()
-        policy = PostPolicy(token=SessionToken(**access_token.claims))
+        token = SessionToken(**access_token.claims) if access_token else SessionToken(sub="", scope="")
+        policy = PostPolicy(token=token)
         query = policy.scope("get")
         if blog_id is not None:
             query = query.where(Post.blog_id == blog_id)
@@ -43,11 +45,13 @@ def register(mcp: FastMCP):
             posts = result.scalars().all()
         return [PostSerializer(post).to_json() for post in posts]
 
-    @mcp.tool(auth=post_auth(*POSTS_READ))
+    @mcp.tool
     async def get_post(post_id: str) -> dict:
-        """Get a single post by ID."""
+        """Get a post by ID. Returns the post if published (no auth required),
+        or if the caller has read permissions."""
         access_token = get_access_token()
-        policy = PostPolicy(token=SessionToken(**access_token.claims))
+        token = SessionToken(**access_token.claims) if access_token else SessionToken(sub="", scope="")
+        policy = PostPolicy(token=token)
         query = policy.scope("get").where(Post.id == post_id)
         async with AsyncSessionLocal() as db:
             result = await db.execute(query)
