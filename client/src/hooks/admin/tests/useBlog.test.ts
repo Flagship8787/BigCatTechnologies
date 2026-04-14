@@ -13,6 +13,8 @@ const mockBlog: BlogWithPosts = {
   id: 'blog-abc',
   name: 'Test Blog',
   description: 'A test blog',
+  author_name: 'Test Author',
+  owner_id: 'user-123',
   created_at: '2024-01-01T00:00:00.000Z',
   updated_at: '2024-01-02T00:00:00.000Z',
   posts: [
