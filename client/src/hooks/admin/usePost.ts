@@ -62,5 +62,18 @@ export function usePost() {
     return updated
   }
 
-  return { post, error, loading, fetchData, publish, update }
+  async function tweet(postId: string): Promise<{ id: string; tweet_id: string; url: string }> {
+    const token = await getAccessTokenSilently()
+    const res = await fetch(`${API_URL}/admin/posts/${postId}/tweet`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}))
+      throw new Error((body as { detail?: string }).detail ?? `Server returned ${res.status}`)
+    }
+    return res.json() as Promise<{ id: string; tweet_id: string; url: string }>
+  }
+
+  return { post, error, loading, fetchData, publish, update, tweet }
 }

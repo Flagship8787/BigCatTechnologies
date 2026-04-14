@@ -10,6 +10,7 @@ import {
   Paper,
 } from '@mui/material'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
+import XIcon from '@mui/icons-material/X'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { usePost } from '../../hooks/admin/usePost'
@@ -17,10 +18,12 @@ import { usePost } from '../../hooks/admin/usePost'
 export default function PostDetails() {
   const { postId } = useParams<{ postId: string }>()
   const navigate = useNavigate()
-  const { post, loading, error, fetchData, publish } = usePost()
+  const { post, loading, error, fetchData, publish, tweet } = usePost()
 
   const [publishing, setPublishing] = useState(false)
   const [publishError, setPublishError] = useState<string | null>(null)
+  const [tweeting, setTweeting] = useState(false)
+  const [tweetError, setTweetError] = useState<string | null>(null)
 
   useEffect(() => {
     if (postId) fetchData(postId)
@@ -39,6 +42,20 @@ export default function PostDetails() {
       setPublishing(false)
     }
   }, [postId, publish])
+
+  const handleTweet = useCallback(async () => {
+    if (!postId) return
+    setTweeting(true)
+    setTweetError(null)
+    try {
+      const result = await tweet(postId)
+      window.open(result.url, '_blank')
+    } catch (err) {
+      setTweetError((err as Error).message)
+    } finally {
+      setTweeting(false)
+    }
+  }, [postId, tweet])
 
   return (
     <>
@@ -77,6 +94,9 @@ export default function PostDetails() {
           {publishError && (
             <Typography color="error" sx={{ mb: 2 }}>{publishError}</Typography>
           )}
+          {tweetError && (
+            <Typography color="error" sx={{ mb: 2 }}>{tweetError}</Typography>
+          )}
 
           <Box sx={{ display: 'flex', gap: 2 }}>
             {post.state === 'drafted' && (
@@ -87,6 +107,16 @@ export default function PostDetails() {
                 disabled={publishing}
               >
                 {publishing ? 'Publishing…' : 'Publish'}
+              </Button>
+            )}
+            {post.state === 'published' && (
+              <Button
+                variant="outlined"
+                startIcon={<XIcon />}
+                onClick={handleTweet}
+                disabled={tweeting}
+              >
+                {tweeting ? 'Tweeting…' : 'Tweet'}
               </Button>
             )}
             <Button
