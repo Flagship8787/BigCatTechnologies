@@ -77,6 +77,12 @@ export default function BlogDetail() {
             )}
             <Stack direction="row" spacing={3}>
               <Typography variant="body2" color="text.secondary">
+                Author: {blog.author_name}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Owner ID: {blog.owner_id}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
                 Created: {new Date(blog.created_at).toLocaleDateString()}
               </Typography>
               <Typography variant="body2" color="text.secondary">
