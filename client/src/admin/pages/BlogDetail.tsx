@@ -12,7 +12,11 @@ import {
   Button,
   Chip,
   Tooltip,
+  Box,
+  Stack,
+  Divider,
 } from '@mui/material'
+import { PageContainer } from '@toolpad/core/PageContainer'
 import VisibilityIcon from '@mui/icons-material/Visibility'
 import EditIcon from '@mui/icons-material/Edit'
 import DeleteIcon from '@mui/icons-material/Delete'
@@ -51,14 +55,36 @@ export default function BlogDetail() {
   }, [tweet])
 
   return (
-    <>
+    <PageContainer title={blog?.name ?? 'Blog'}>
       {loading && <CircularProgress />}
       {error && <Typography color="error">{error}</Typography>}
       {!loading && !error && blog && (
         <>
-          <Typography variant="h4" gutterBottom>{blog.name}</Typography>
-          <Typography variant="h5" gutterBottom sx={{ mt: 3 }}>Posts</Typography>
-          <Button variant="contained" sx={{ mb: 2 }} onClick={() => navigate(`/admin/blogs/${id}/posts/new`)}>+ Create New Post</Button>
+          {/* Blog attributes */}
+          <Stack spacing={1} sx={{ mb: 3 }}>
+            {blog.description && (
+              <Typography variant="body1" color="text.secondary">{blog.description}</Typography>
+            )}
+            <Stack direction="row" spacing={3}>
+              <Typography variant="body2" color="text.secondary">
+                Created: {new Date(blog.created_at).toLocaleDateString()}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Updated: {new Date(blog.updated_at).toLocaleDateString()}
+              </Typography>
+            </Stack>
+          </Stack>
+
+          <Divider sx={{ mb: 3 }} />
+
+          {/* Posts section header */}
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+            <Typography variant="h5">Posts</Typography>
+            <Button variant="contained" onClick={() => navigate(`/admin/blogs/${id}/posts/new`)}>
+              + Create New Post
+            </Button>
+          </Box>
+
           <Table>
             <TableHead>
               <TableRow>
@@ -111,6 +137,6 @@ export default function BlogDetail() {
           </Table>
         </>
       )}
-    </>
+    </PageContainer>
   )
 }

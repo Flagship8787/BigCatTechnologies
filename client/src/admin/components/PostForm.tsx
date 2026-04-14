@@ -1,10 +1,6 @@
 import { useState } from 'react'
 import {
   TextField,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
   Button,
   Box,
   Stack,
@@ -35,11 +31,10 @@ export default function PostForm({
 }: PostFormProps) {
   const [title, setTitle] = useState(initialValues?.title ?? '')
   const [body, setBody] = useState(initialValues?.body ?? '')
-  const [state, setState] = useState(initialValues?.state ?? 'drafted')
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    await onSubmit({ title, body, state })
+    await onSubmit({ title, body, state: initialValues?.state ?? 'drafted' })
   }
 
   return (
@@ -56,19 +51,6 @@ export default function PostForm({
           value={body}
           onChange={(value) => setBody(value)}
         />
-        <FormControl fullWidth>
-          <InputLabel id="state-label">State</InputLabel>
-          <Select
-            labelId="state-label"
-            value={state}
-            label="State"
-            onChange={(e) => setState(e.target.value)}
-          >
-            <MenuItem value="drafted">drafted</MenuItem>
-            <MenuItem value="published">published</MenuItem>
-            <MenuItem value="deleted">deleted</MenuItem>
-          </Select>
-        </FormControl>
         <Stack direction="row" spacing={2}>
           <Button type="submit" variant="contained" disabled={loading}>
             {submitLabel}
