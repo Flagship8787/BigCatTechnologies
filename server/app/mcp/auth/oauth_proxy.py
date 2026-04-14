@@ -1,4 +1,8 @@
+import base64
+import json
 import os
+from typing import Any
+
 from dotenv import load_dotenv
 from fastmcp.server.auth import OAuthProxy
 from fastmcp.server.auth.providers.jwt import JWTVerifier
@@ -28,7 +32,56 @@ token_verifier = JWTVerifier(
     audience=os.environ['AUTH0_AUDIENCE']
 )
 
-auth = OAuthProxy(
+
+def _decode_jwt_payload(token: str) -> dict:
+    """Decode JWT payload without signature verification."""
+    parts = token.split('.')
+    if len(parts) != 3:
+        return {}
+    payload = parts[1]
+    # Add padding
+    payload += '=' * (4 - len(payload) % 4)
+    try:
+        return json.loads(base64.urlsafe_b64decode(payload))
+    except Exception:
+        return {}
+
+
+class Auth0OAuthProxy(OAuthProxy):
+    """OAuthProxy subclass that extracts Auth0 claims into the FastMCP JWT.
+
+    Auth0 access tokens are JWTs containing `sub`, `permissions`, `scope`,
+    and other user identity claims. By default OAuthProxy._extract_upstream_claims
+    returns None, so these claims are lost. This subclass decodes the upstream
+    Auth0 access token and returns the relevant claims so they are embedded
+    in the FastMCP JWT under the `upstream_claims` key.
+    """
+
+    async def _extract_upstream_claims(
+        self, idp_tokens: dict[str, Any]
+    ) -> dict[str, Any] | None:
+        """Extract Auth0 claims from the upstream access token."""
+        access_token = idp_tokens.get('access_token')
+        if not access_token:
+            return None
+
+        payload = _decode_jwt_payload(access_token)
+        if not payload:
+            return None
+
+        claims: dict[str, Any] = {}
+
+        if sub := payload.get('sub'):
+            claims['sub'] = sub
+        if permissions := payload.get('permissions'):
+            claims['permissions'] = permissions
+        if scope := payload.get('scope'):
+            claims['scope'] = scope
+
+        return claims or None
+
+
+auth = Auth0OAuthProxy(
     upstream_authorization_endpoint=os.environ['AUTH0_AUTH_ENDPOINT'],
     upstream_token_endpoint=os.environ['AUTH0_TOKEN_ENDPOINT'],
     upstream_client_id=os.environ['AUTH0_MCP_CLIENT_ID'],

@@ -16,6 +16,24 @@ POSTS_READ = ("admin", "posts:admin", "posts:admin:own")
 POSTS_UPDATE = ("admin", "posts:admin", "posts:admin:own")
 
 
+def _session_token_from_access_token(access_token) -> SessionToken:
+    """Build a SessionToken from a FastMCP AccessToken.
+
+    The OAuthProxy embeds upstream Auth0 claims under `upstream_claims` in the
+    FastMCP JWT payload. We prefer those when present, falling back to top-level
+    claims for backwards compatibility.
+    """
+    if access_token is None:
+        return SessionToken(sub="", scope="")
+    claims = access_token.claims or {}
+    upstream = claims.get("upstream_claims") or {}
+    return SessionToken(
+        sub=upstream.get("sub") or claims.get("sub") or "",
+        scope=upstream.get("scope") or claims.get("scope") or "",
+        permissions=upstream.get("permissions") or claims.get("permissions") or [],
+    )
+
+
 def register(mcp: FastMCP):
 
     @mcp.tool
@@ -35,8 +53,7 @@ def register(mcp: FastMCP):
         """List posts. Returns only published posts for unauthenticated callers.
         Authenticated callers with read permissions see all posts."""
         access_token = get_access_token()
-        token = SessionToken(**access_token.claims) if access_token else SessionToken(sub="", scope="")
-        policy = PostPolicy(token=token)
+        policy = PostPolicy(token=_session_token_from_access_token(access_token))
         query = policy.scope("get")
         if blog_id is not None:
             query = query.where(Post.blog_id == blog_id)
@@ -50,8 +67,7 @@ def register(mcp: FastMCP):
         """Get a post by ID. Returns the post if published (no auth required),
         or if the caller has read permissions."""
         access_token = get_access_token()
-        token = SessionToken(**access_token.claims) if access_token else SessionToken(sub="", scope="")
-        policy = PostPolicy(token=token)
+        policy = PostPolicy(token=_session_token_from_access_token(access_token))
         query = policy.scope("get").where(Post.id == post_id)
         async with AsyncSessionLocal() as db:
             result = await db.execute(query)
@@ -64,7 +80,7 @@ def register(mcp: FastMCP):
     async def update_post(post_id: str, title: Optional[str] = None, body: Optional[str] = None) -> dict:
         """Update the title and/or body of a drafted post. Raises an error if the post is published."""
         access_token = get_access_token()
-        policy = PostPolicy(token=SessionToken(**access_token.claims))
+        policy = PostPolicy(token=_session_token_from_access_token(access_token))
         query = policy.scope("update").where(Post.id == post_id)
         async with AsyncSessionLocal() as db:
             result = await db.execute(query)
