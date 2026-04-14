@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { CircularProgress, Typography } from '@mui/material'
+import { PageContainer } from '@toolpad/core/PageContainer'
 import PostForm from '../components/PostForm'
 import { usePost } from '../../hooks/admin/usePost'
 
@@ -28,8 +29,7 @@ export default function EditPost() {
   }
 
   return (
-    <>
-      <Typography variant="h4" gutterBottom>Edit Post</Typography>
+    <PageContainer title="Edit Post">
       {fetchLoading && <CircularProgress />}
       {fetchError && <Typography color="error">{fetchError}</Typography>}
       {submitError && <Typography color="error" sx={{ mb: 2 }}>{submitError}</Typography>}
@@ -41,6 +41,6 @@ export default function EditPost() {
           loading={submitLoading}
         />
       )}
-    </>
+    </PageContainer>
   )
 }

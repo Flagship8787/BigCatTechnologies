@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useAuth0 } from '@auth0/auth0-react'
 import { Box, Chip, CircularProgress, Paper, Typography } from '@mui/material'
+import { PageContainer } from '@toolpad/core/PageContainer'
 import './Dashboard.css'
 
 function decodeJwtPayload(token: string): Record<string, unknown> {
@@ -23,7 +24,7 @@ export default function Dashboard() {
   }, [getAccessTokenSilently])
 
   return (
-    <>
+    <PageContainer title="Dashboard">
       <section>
         <h1>Dashboard</h1>
         <p>Welcome back, {user?.email}</p>
@@ -60,6 +61,6 @@ export default function Dashboard() {
           </Box>
         )}
       </Paper>
-    </>
+    </PageContainer>
   )
 }

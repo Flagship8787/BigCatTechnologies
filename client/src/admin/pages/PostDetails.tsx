@@ -11,6 +11,7 @@ import {
 } from '@mui/material'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import XIcon from '@mui/icons-material/X'
+import { PageContainer } from '@toolpad/core/PageContainer'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { usePost } from '../../hooks/admin/usePost'
@@ -58,7 +59,7 @@ export default function PostDetails() {
   }, [postId, tweet])
 
   return (
-    <>
+    <PageContainer title={post?.title ?? 'Post'}>
       <Button variant="text" onClick={() => navigate(-1)} sx={{ mb: 2 }} startIcon={<ArrowBackIcon />}>
         Back
       </Button>
@@ -128,6 +129,6 @@ export default function PostDetails() {
           </Box>
         </Paper>
       )}
-    </>
+    </PageContainer>
   )
 }

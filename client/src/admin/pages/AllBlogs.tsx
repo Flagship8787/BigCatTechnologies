@@ -10,6 +10,7 @@ import {
   CircularProgress,
   Typography,
 } from '@mui/material'
+import { PageContainer } from '@toolpad/core/PageContainer'
 import VisibilityIcon from '@mui/icons-material/Visibility'
 import EditIcon from '@mui/icons-material/Edit'
 import DeleteIcon from '@mui/icons-material/Delete'
@@ -24,8 +25,7 @@ export default function AllBlogs() {
   }, [])
 
   return (
-    <>
-      <Typography variant="h4" gutterBottom>All Blogs</Typography>
+    <PageContainer title="All Blogs">
       {loading && <CircularProgress />}
       {error && <Typography color="error">{error}</Typography>}
       {!loading && !error && (
@@ -62,6 +62,6 @@ export default function AllBlogs() {
           </TableBody>
         </Table>
       )}
-    </>
+    </PageContainer>
   )
 }
