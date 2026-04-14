@@ -11,11 +11,13 @@ import {
   Typography,
   Button,
   Chip,
+  Tooltip,
 } from '@mui/material'
 import VisibilityIcon from '@mui/icons-material/Visibility'
 import EditIcon from '@mui/icons-material/Edit'
 import DeleteIcon from '@mui/icons-material/Delete'
 import PublishIcon from '@mui/icons-material/Publish'
+import XIcon from '@mui/icons-material/X'
 import { useBlog } from '../../hooks/admin/useBlog'
 import { usePost } from '../../hooks/admin/usePost'
 
@@ -23,7 +25,7 @@ export default function BlogDetail() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { blog, error, loading, refreshData } = useBlog()
-  const { publish } = usePost()
+  const { publish, tweet } = usePost()
 
   useEffect(() => {
     if (id) refreshData(id)
@@ -38,6 +40,15 @@ export default function BlogDetail() {
       console.error('Failed to publish post:', err)
     }
   }, [publish, refreshData, id])
+
+  const handleTweet = useCallback(async (postId: string) => {
+    try {
+      const result = await tweet(postId)
+      window.open(result.url, '_blank')
+    } catch (err) {
+      console.error('Failed to tweet post:', err)
+    }
+  }, [tweet])
 
   return (
     <>
@@ -82,6 +93,13 @@ export default function BlogDetail() {
                       <IconButton aria-label="publish" onClick={() => handlePublish(post.id)}>
                         <PublishIcon />
                       </IconButton>
+                    )}
+                    {post.state === 'published' && (
+                      <Tooltip title="Tweet this post">
+                        <IconButton aria-label="tweet" onClick={() => handleTweet(post.id)}>
+                          <XIcon />
+                        </IconButton>
+                      </Tooltip>
                     )}
                     <IconButton aria-label="delete">
                       <DeleteIcon />
