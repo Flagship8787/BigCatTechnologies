@@ -10,6 +10,7 @@ import {
   Paper,
 } from '@mui/material'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
+import UnpublishedIcon from '@mui/icons-material/Unpublished'
 import XIcon from '@mui/icons-material/X'
 import { PageContainer } from '@toolpad/core/PageContainer'
 import ReactMarkdown from 'react-markdown'
@@ -19,10 +20,12 @@ import { usePost } from '../../hooks/admin/usePost'
 export default function PostDetails() {
   const { postId } = useParams<{ postId: string }>()
   const navigate = useNavigate()
-  const { post, loading, error, fetchData, publish, tweet } = usePost()
+  const { post, loading, error, fetchData, publish, unpublish, tweet } = usePost()
 
   const [publishing, setPublishing] = useState(false)
   const [publishError, setPublishError] = useState<string | null>(null)
+  const [unpublishing, setUnpublishing] = useState(false)
+  const [unpublishError, setUnpublishError] = useState<string | null>(null)
   const [tweeting, setTweeting] = useState(false)
   const [tweetError, setTweetError] = useState<string | null>(null)
 
@@ -43,6 +46,19 @@ export default function PostDetails() {
       setPublishing(false)
     }
   }, [postId, publish])
+
+  const handleUnpublish = useCallback(async () => {
+    if (!postId) return
+    setUnpublishing(true)
+    setUnpublishError(null)
+    try {
+      await unpublish(postId)
+    } catch (err) {
+      setUnpublishError((err as Error).message)
+    } finally {
+      setUnpublishing(false)
+    }
+  }, [postId, unpublish])
 
   const handleTweet = useCallback(async () => {
     if (!postId) return
@@ -95,6 +111,9 @@ export default function PostDetails() {
           {publishError && (
             <Typography color="error" sx={{ mb: 2 }}>{publishError}</Typography>
           )}
+          {unpublishError && (
+            <Typography color="error" sx={{ mb: 2 }}>{unpublishError}</Typography>
+          )}
           {tweetError && (
             <Typography color="error" sx={{ mb: 2 }}>{tweetError}</Typography>
           )}
@@ -108,6 +127,17 @@ export default function PostDetails() {
                 disabled={publishing}
               >
                 {publishing ? 'Publishing…' : 'Publish'}
+              </Button>
+            )}
+            {post.state === 'published' && (
+              <Button
+                variant="outlined"
+                color="warning"
+                startIcon={<UnpublishedIcon />}
+                onClick={handleUnpublish}
+                disabled={unpublishing}
+              >
+                {unpublishing ? 'Unpublishing…' : 'Unpublish'}
               </Button>
             )}
             {post.state === 'published' && (

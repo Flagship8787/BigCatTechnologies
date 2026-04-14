@@ -21,6 +21,7 @@ import VisibilityIcon from '@mui/icons-material/Visibility'
 import EditIcon from '@mui/icons-material/Edit'
 import DeleteIcon from '@mui/icons-material/Delete'
 import PublishIcon from '@mui/icons-material/Publish'
+import UnpublishedIcon from '@mui/icons-material/Unpublished'
 import XIcon from '@mui/icons-material/X'
 import { useBlog } from '../../hooks/admin/useBlog'
 import { usePost } from '../../hooks/admin/usePost'
@@ -29,7 +30,7 @@ export default function BlogDetail() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { blog, error, loading, refreshData } = useBlog()
-  const { publish, tweet } = usePost()
+  const { publish, unpublish, tweet } = usePost()
 
   useEffect(() => {
     if (id) refreshData(id)
@@ -44,6 +45,15 @@ export default function BlogDetail() {
       console.error('Failed to publish post:', err)
     }
   }, [publish, refreshData, id])
+
+  const handleUnpublish = useCallback(async (postId: string) => {
+    try {
+      await unpublish(postId)
+      if (id) refreshData(id)
+    } catch (err) {
+      console.error('Failed to unpublish post:', err)
+    }
+  }, [unpublish, refreshData, id])
 
   const handleTweet = useCallback(async (postId: string) => {
     try {
@@ -119,6 +129,13 @@ export default function BlogDetail() {
                       <IconButton aria-label="publish" onClick={() => handlePublish(post.id)}>
                         <PublishIcon />
                       </IconButton>
+                    )}
+                    {post.state === 'published' && (
+                      <Tooltip title="Unpublish post">
+                        <IconButton aria-label="unpublish" onClick={() => handleUnpublish(post.id)}>
+                          <UnpublishedIcon />
+                        </IconButton>
+                      </Tooltip>
                     )}
                     {post.state === 'published' && (
                       <Tooltip title="Tweet this post">

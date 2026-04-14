@@ -62,6 +62,21 @@ export function usePost() {
     return updated
   }
 
+  async function unpublish(postId: string): Promise<Post> {
+    const token = await getAccessTokenSilently()
+    const res = await fetch(`${API_URL}/admin/posts/${postId}/unpublish`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}))
+      throw new Error((body as { detail?: string }).detail ?? `Server returned ${res.status}`)
+    }
+    const updated = await res.json() as Post
+    setPost(updated)
+    return updated
+  }
+
   async function tweet(postId: string): Promise<{ id: string; tweet_id: string; url: string }> {
     const token = await getAccessTokenSilently()
     const res = await fetch(`${API_URL}/admin/posts/${postId}/tweet`, {
@@ -75,5 +90,5 @@ export function usePost() {
     return res.json() as Promise<{ id: string; tweet_id: string; url: string }>
   }
 
-  return { post, error, loading, fetchData, publish, update, tweet }
+  return { post, error, loading, fetchData, publish, unpublish, update, tweet }
 }
