@@ -2,9 +2,11 @@ import { useEffect } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import rehypeRaw from 'rehype-raw'
 import '../App.css'
 import './PostDetail.css'
 import Nav from '../components/Nav'
+import bigcatLogo from '../assets/bigcat_logo.png'
 import { usePost } from '../hooks/usePost'
 import { useFormatDate } from '../hooks/useFormatDate'
 
@@ -21,8 +23,9 @@ export default function PostDetail() {
   return (
     <div className="app">
       <header className="app-header">
-        <Link to="/" className="wordmark" style={{ textDecoration: 'none' }}>
-          BigCat Technologies
+        <Link to="/" className="wordmark-group" style={{ textDecoration: 'none' }}>
+          <img src={bigcatLogo} alt="BigCat Technologies logo" className="wordmark-logo" />
+          <span className="wordmark">BigCat Technologies</span>
         </Link>
         <Nav />
       </header>
@@ -43,7 +46,7 @@ export default function PostDetail() {
               </time>
             </header>
             <div className="post-detail-body">
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>
                 {post.body}
               </ReactMarkdown>
             </div>
