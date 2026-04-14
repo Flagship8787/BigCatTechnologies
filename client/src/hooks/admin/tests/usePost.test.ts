@@ -48,11 +48,12 @@ describe('usePost (admin)', () => {
     expect(result.current.error).toBeNull()
   })
 
-  it('exposes fetchData, publish, and update functions', () => {
+  it('exposes fetchData, publish, update, and tweet functions', () => {
     const { result } = renderHook(() => usePost())
     expect(typeof result.current.fetchData).toBe('function')
     expect(typeof result.current.publish).toBe('function')
     expect(typeof result.current.update).toBe('function')
+    expect(typeof result.current.tweet).toBe('function')
   })
 
   // --- fetchData ---
@@ -252,6 +253,60 @@ describe('usePost (admin)', () => {
 
       await expect(
         act(async () => { await result.current.update('post-123', updateValues) })
+      ).rejects.toThrow('Server returned 500')
+    })
+  })
+
+  // --- tweet ---
+
+  describe('tweet', () => {
+    const tweetResponse = { id: 'tweet-record-1', tweet_id: '1234567890', url: 'https://x.com/i/web/status/1234567890' }
+
+    it('calls POST /admin/posts/:postId/tweet with auth header', async () => {
+      vi.mocked(fetch).mockResolvedValueOnce(makeFetchResponse(tweetResponse))
+
+      const { result } = renderHook(() => usePost())
+
+      await act(async () => { await result.current.tweet('post-123') })
+
+      expect(fetch).toHaveBeenCalledWith('/admin/posts/post-123/tweet', {
+        method: 'POST',
+        headers: { Authorization: 'Bearer test-token' },
+      })
+    })
+
+    it('returns tweet data on success', async () => {
+      vi.mocked(fetch).mockResolvedValueOnce(makeFetchResponse(tweetResponse))
+
+      const { result } = renderHook(() => usePost())
+
+      let returned: typeof tweetResponse | undefined
+      await act(async () => {
+        returned = await result.current.tweet('post-123')
+      })
+
+      expect(returned).toEqual(tweetResponse)
+    })
+
+    it('throws with server detail message on non-OK response', async () => {
+      vi.mocked(fetch).mockResolvedValueOnce(
+        makeFetchResponse({ detail: 'Post has already been tweeted' }, false, 422)
+      )
+
+      const { result } = renderHook(() => usePost())
+
+      await expect(
+        act(async () => { await result.current.tweet('post-123') })
+      ).rejects.toThrow('Post has already been tweeted')
+    })
+
+    it('throws with generic message when response body has no detail', async () => {
+      vi.mocked(fetch).mockResolvedValueOnce(makeFetchResponse({}, false, 500))
+
+      const { result } = renderHook(() => usePost())
+
+      await expect(
+        act(async () => { await result.current.tweet('post-123') })
       ).rejects.toThrow('Server returned 500')
     })
   })
