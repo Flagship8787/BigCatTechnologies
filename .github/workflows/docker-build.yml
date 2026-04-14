@@ -61,4 +61,5 @@ jobs:
             --image us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/bigcat-app/server:${{ github.event.workflow_run.head_sha }} \
             --region us-central1 \
             --project ${{ secrets.GCP_PROJECT_ID }} \
+            --update-secrets=DB_PASSWORD=bigcat-db-password:latest,REDIS_PASSWORD=bigcat-redis-password:latest,AUTH0_SPA_CLIENT_SECRET=bigcat-auth0-spa-client-secret:latest,AUTH0_MCP_CLIENT_SECRET=bigcat-auth0-mcp-client-secret:latest,X_API_KEY=bigcat-x-api-key:latest,X_API_KEY_SECRET=bigcat-x-api-key-secret:latest,X_ACCESS_TOKEN=bigcat-x-access-token:latest,X_ACCESS_TOKEN_SECRET=bigcat-x-access-token-secret:latest \
             --quiet
