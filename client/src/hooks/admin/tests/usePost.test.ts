@@ -48,10 +48,11 @@ describe('usePost (admin)', () => {
     expect(result.current.error).toBeNull()
   })
 
-  it('exposes fetchData, publish, update, and tweet functions', () => {
+  it('exposes fetchData, publish, unpublish, update, and tweet functions', () => {
     const { result } = renderHook(() => usePost())
     expect(typeof result.current.fetchData).toBe('function')
     expect(typeof result.current.publish).toBe('function')
+    expect(typeof result.current.unpublish).toBe('function')
     expect(typeof result.current.update).toBe('function')
     expect(typeof result.current.tweet).toBe('function')
   })
@@ -307,6 +308,68 @@ describe('usePost (admin)', () => {
 
       await expect(
         act(async () => { await result.current.tweet('post-123') })
+      ).rejects.toThrow('Server returned 500')
+    })
+  })
+
+  // --- unpublish ---
+
+  describe('unpublish', () => {
+    it('calls POST /admin/posts/:postId/unpublish with auth header', async () => {
+      vi.mocked(fetch).mockResolvedValueOnce(makeFetchResponse(mockPost))
+
+      const { result } = renderHook(() => usePost())
+
+      await act(async () => { await result.current.unpublish('post-123') })
+
+      expect(fetch).toHaveBeenCalledWith('/admin/posts/post-123/unpublish', {
+        method: 'POST',
+        headers: { Authorization: 'Bearer test-token' },
+      })
+    })
+
+    it('returns the updated post on success', async () => {
+      vi.mocked(fetch).mockResolvedValueOnce(makeFetchResponse(mockPost))
+
+      const { result } = renderHook(() => usePost())
+
+      let returned: Post | undefined
+      await act(async () => {
+        returned = await result.current.unpublish('post-123')
+      })
+
+      expect(returned).toEqual(mockPost)
+    })
+
+    it('updates post state in hook after successful unpublish', async () => {
+      vi.mocked(fetch).mockResolvedValueOnce(makeFetchResponse(mockPost))
+
+      const { result } = renderHook(() => usePost())
+
+      await act(async () => { await result.current.unpublish('post-123') })
+
+      expect(result.current.post).toEqual(mockPost)
+    })
+
+    it('throws with server detail message on non-OK response', async () => {
+      vi.mocked(fetch).mockResolvedValueOnce(
+        makeFetchResponse({ detail: 'Post must be in published state to unpublish' }, false, 422)
+      )
+
+      const { result } = renderHook(() => usePost())
+
+      await expect(
+        act(async () => { await result.current.unpublish('post-123') })
+      ).rejects.toThrow('Post must be in published state to unpublish')
+    })
+
+    it('throws with generic message when response body has no detail', async () => {
+      vi.mocked(fetch).mockResolvedValueOnce(makeFetchResponse({}, false, 500))
+
+      const { result } = renderHook(() => usePost())
+
+      await expect(
+        act(async () => { await result.current.unpublish('post-123') })
       ).rejects.toThrow('Server returned 500')
     })
   })

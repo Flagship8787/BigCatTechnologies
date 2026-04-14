@@ -77,6 +77,26 @@ def register(app: FastAPI):
             raise HTTPException(status_code=422, detail=detail)
         return PostSerializer(published_post).to_json()
 
+    @app.post("/admin/posts/{post_id}/unpublish")
+    async def unpublish_post(
+        post_id: str,
+        db: AsyncSession = Depends(get_db),
+        policy: PostPolicy = Depends(get_post_policy),
+    ):
+        from app.domains.posts.unpublish.operation import Operation as UnpublishOperation
+        query = policy.scope("unpublish").where(Post.id == post_id)
+        result = await db.execute(query)
+        post = result.scalar_one_or_none()
+        if post is None:
+            raise HTTPException(status_code=404, detail="Post not found")
+        try:
+            unpublished_post = await UnpublishOperation().perform_in(db, post=post)
+        except ValidationError as e:
+            state_errors = e.errors.get("state", [])
+            detail = state_errors[0] if state_errors else "Invalid post state"
+            raise HTTPException(status_code=422, detail=detail)
+        return PostSerializer(unpublished_post).to_json()
+
     @app.post("/admin/posts/{post_id}/tweet")
     async def tweet_post(
         post_id: str,

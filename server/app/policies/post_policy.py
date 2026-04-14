@@ -12,7 +12,7 @@ class PostPolicy(BasePolicy):
     TWEET_OWN_ACCESS = ("posts:publish:tweet:own",)
 
     def scope(self, action: str):
-        if action in ("publish", "get", "update"):
+        if action in ("publish", "unpublish", "get", "update"):
             if self.has_permission(*self.FULL_ACCESS):
                 return select(Post)
             if self.has_permission(*self.OWN_ACCESS):
