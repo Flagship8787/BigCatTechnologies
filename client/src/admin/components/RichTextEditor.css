@@ -1,0 +1,13 @@
+.rich-text-editor-content .tiptap {
+  min-height: 300px;
+  padding: 12px 16px;
+  outline: none;
+}
+
+.rich-text-editor-content .tiptap p.is-editor-empty:first-child::before {
+  color: #aaa;
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}

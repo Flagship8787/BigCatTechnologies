@@ -12,8 +12,6 @@ import {
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import XIcon from '@mui/icons-material/X'
 import { PageContainer } from '@toolpad/core/PageContainer'
-import ReactMarkdown from 'react-markdown'
-import remarkGfm from 'remark-gfm'
 import { usePost } from '../../hooks/admin/usePost'
 
 export default function PostDetails() {
@@ -87,9 +85,7 @@ export default function PostDetails() {
           </Typography>
 
           <Box sx={{ mb: 3 }}>
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>
-              {post.body}
-            </ReactMarkdown>
+            <div dangerouslySetInnerHTML={{ __html: post.body }} />
           </Box>
 
           {publishError && (

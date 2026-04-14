@@ -5,8 +5,7 @@ import {
   Box,
   Stack,
 } from '@mui/material'
-import SimpleMDE from 'react-simplemde-editor'
-import 'easymde/dist/easymde.min.css'
+import RichTextEditor from './RichTextEditor'
 
 interface PostFormValues {
   title: string
@@ -47,10 +46,7 @@ export default function PostForm({
           required
           fullWidth
         />
-        <SimpleMDE
-          value={body}
-          onChange={(value) => setBody(value)}
-        />
+        <RichTextEditor value={body} onChange={(html) => setBody(html)} />
         <Stack direction="row" spacing={2}>
           <Button type="submit" variant="contained" disabled={loading}>
             {submitLabel}

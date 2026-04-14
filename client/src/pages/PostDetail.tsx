@@ -1,8 +1,5 @@
 import { useEffect } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import ReactMarkdown from 'react-markdown'
-import remarkGfm from 'remark-gfm'
-import rehypeRaw from 'rehype-raw'
 import '../App.css'
 import './PostDetail.css'
 import Nav from '../components/Nav'
@@ -46,9 +43,7 @@ export default function PostDetail() {
               </time>
             </header>
             <div className="post-detail-body">
-              <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>
-                {post.body}
-              </ReactMarkdown>
+              <div dangerouslySetInnerHTML={{ __html: post.body }} />
             </div>
           </article>
         )}
