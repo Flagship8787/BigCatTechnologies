@@ -35,7 +35,12 @@ def register(mcp: FastMCP):
         """List posts. Returns only published posts for unauthenticated callers.
         Authenticated callers with read permissions see all posts."""
         access_token = get_access_token()
-        token = SessionToken(**access_token.claims, permissions=access_token.permissions or []) if access_token else SessionToken(sub="", scope="")
+        if access_token:
+            claims = {**access_token.claims}
+            permissions = claims.pop("permissions", [])
+            token = SessionToken(**claims, permissions=permissions)
+        else:
+            token = SessionToken(sub="", scope="")
         policy = PostPolicy(token=token)
         query = policy.scope("get")
         if blog_id is not None:
@@ -50,7 +55,12 @@ def register(mcp: FastMCP):
         """Get a post by ID. Returns the post if published (no auth required),
         or if the caller has read permissions."""
         access_token = get_access_token()
-        token = SessionToken(**access_token.claims, permissions=access_token.permissions or []) if access_token else SessionToken(sub="", scope="")
+        if access_token:
+            claims = {**access_token.claims}
+            permissions = claims.pop("permissions", [])
+            token = SessionToken(**claims, permissions=permissions)
+        else:
+            token = SessionToken(sub="", scope="")
         policy = PostPolicy(token=token)
         query = policy.scope("get").where(Post.id == post_id)
         async with AsyncSessionLocal() as db:
@@ -64,7 +74,9 @@ def register(mcp: FastMCP):
     async def update_post(post_id: str, title: Optional[str] = None, body: Optional[str] = None) -> dict:
         """Update the title and/or body of a drafted post. Raises an error if the post is published."""
         access_token = get_access_token()
-        policy = PostPolicy(token=SessionToken(**access_token.claims, permissions=access_token.permissions or []))
+        claims = {**access_token.claims}
+        permissions = claims.pop("permissions", [])
+        policy = PostPolicy(token=SessionToken(**claims, permissions=permissions))
         query = policy.scope("update").where(Post.id == post_id)
         async with AsyncSessionLocal() as db:
             result = await db.execute(query)

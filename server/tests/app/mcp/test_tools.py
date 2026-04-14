@@ -30,8 +30,8 @@ def _make_access_token(permissions=None, sub="user-1"):
     token.claims = {
         "sub": sub,
         "scope": "",
+        "permissions": permissions or [],
     }
-    token.permissions = permissions or []
     return token
 
 
