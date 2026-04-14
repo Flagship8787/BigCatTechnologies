@@ -290,3 +290,159 @@ class TestGetPost:
 
             with pytest.raises(ValueError, match="not found"):
                 await registered_tools["get_post"]("nonexistent-id")
+
+
+# ---------------------------------------------------------------------------
+# update_post tool tests
+# ---------------------------------------------------------------------------
+
+class TestUpdatePost:
+
+    def _make_db_result(self, post):
+        result = MagicMock()
+        result.scalars.return_value.first.return_value = post
+        return result
+
+    def _registered_tools(self):
+        from app.mcp.posts import tools as mcp_tools_module
+        mcp = MagicMock()
+        registered_tools = {}
+
+        def capture_tool(auth=None):
+            def decorator(fn):
+                registered_tools[fn.__name__] = fn
+                return fn
+            return decorator
+
+        mcp.tool = capture_tool
+        mcp_tools_module.register(mcp)
+        return registered_tools
+
+    @pytest.mark.asyncio
+    async def test_update_post_updates_title_and_body(self):
+        post = _make_post(id="post-abc", title="Old Title", body="Old Body", state="drafted")
+        updated_post = _make_post(id="post-abc", title="New Title", body="New Body", state="drafted")
+        access_token = _make_access_token(permissions=["admin"])
+
+        mock_query = MagicMock()
+        mock_query.where.return_value = mock_query
+        mock_db = AsyncMock()
+        mock_db.execute.return_value = self._make_db_result(post)
+        mock_db_ctx = AsyncMock()
+        mock_db_ctx.__aenter__.return_value = mock_db
+        mock_db_ctx.__aexit__.return_value = False
+
+        with patch("app.mcp.posts.tools.get_access_token", return_value=access_token), \
+             patch("app.mcp.posts.tools.PostPolicy") as MockPolicy, \
+             patch("app.mcp.posts.tools.AsyncSessionLocal", return_value=mock_db_ctx), \
+             patch("app.mcp.posts.tools.UpdatePost") as MockUpdatePost:
+
+            mock_policy = MockPolicy.return_value
+            mock_policy.scope.return_value = mock_query
+            MockUpdatePost.return_value.perform_in = AsyncMock(return_value=updated_post)
+
+            result = await self._registered_tools()["update_post"]("post-abc", title="New Title", body="New Body")
+
+        assert result["id"] == "post-abc"
+        assert result["title"] == "New Title"
+        assert result["body"] == "New Body"
+
+    @pytest.mark.asyncio
+    async def test_update_post_raises_when_not_found(self):
+        access_token = _make_access_token(permissions=["admin"])
+
+        mock_query = MagicMock()
+        mock_query.where.return_value = mock_query
+        mock_db = AsyncMock()
+        mock_db.execute.return_value = self._make_db_result(None)
+        mock_db_ctx = AsyncMock()
+        mock_db_ctx.__aenter__.return_value = mock_db
+        mock_db_ctx.__aexit__.return_value = False
+
+        with patch("app.mcp.posts.tools.get_access_token", return_value=access_token), \
+             patch("app.mcp.posts.tools.PostPolicy") as MockPolicy, \
+             patch("app.mcp.posts.tools.AsyncSessionLocal", return_value=mock_db_ctx):
+
+            mock_policy = MockPolicy.return_value
+            mock_policy.scope.return_value = mock_query
+
+            with pytest.raises(ValueError, match="not found"):
+                await self._registered_tools()["update_post"]("nonexistent-id")
+
+    @pytest.mark.asyncio
+    async def test_update_post_raises_when_post_is_published(self):
+        post = _make_post(id="post-abc", state="published")
+        access_token = _make_access_token(permissions=["admin"])
+
+        mock_query = MagicMock()
+        mock_query.where.return_value = mock_query
+        mock_db = AsyncMock()
+        mock_db.execute.return_value = self._make_db_result(post)
+        mock_db_ctx = AsyncMock()
+        mock_db_ctx.__aenter__.return_value = mock_db
+        mock_db_ctx.__aexit__.return_value = False
+
+        with patch("app.mcp.posts.tools.get_access_token", return_value=access_token), \
+             patch("app.mcp.posts.tools.PostPolicy") as MockPolicy, \
+             patch("app.mcp.posts.tools.AsyncSessionLocal", return_value=mock_db_ctx):
+
+            mock_policy = MockPolicy.return_value
+            mock_policy.scope.return_value = mock_query
+
+            with pytest.raises(ValueError, match="published"):
+                await self._registered_tools()["update_post"]("post-abc", title="New Title")
+
+    @pytest.mark.asyncio
+    async def test_update_post_passes_only_provided_fields(self):
+        post = _make_post(id="post-abc", title="Old Title", body="Unchanged Body", state="drafted")
+        updated_post = _make_post(id="post-abc", title="New Title", body="Unchanged Body", state="drafted")
+        access_token = _make_access_token(permissions=["posts:admin"])
+
+        mock_query = MagicMock()
+        mock_query.where.return_value = mock_query
+        mock_db = AsyncMock()
+        mock_db.execute.return_value = self._make_db_result(post)
+        mock_db_ctx = AsyncMock()
+        mock_db_ctx.__aenter__.return_value = mock_db
+        mock_db_ctx.__aexit__.return_value = False
+
+        with patch("app.mcp.posts.tools.get_access_token", return_value=access_token), \
+             patch("app.mcp.posts.tools.PostPolicy") as MockPolicy, \
+             patch("app.mcp.posts.tools.AsyncSessionLocal", return_value=mock_db_ctx), \
+             patch("app.mcp.posts.tools.UpdatePost") as MockUpdatePost:
+
+            mock_policy = MockPolicy.return_value
+            mock_policy.scope.return_value = mock_query
+            mock_perform = AsyncMock(return_value=updated_post)
+            MockUpdatePost.return_value.perform_in = mock_perform
+
+            await self._registered_tools()["update_post"]("post-abc", title="New Title")
+
+        mock_perform.assert_called_once_with(mock_db, post=post, title="New Title", body=None)
+
+    @pytest.mark.asyncio
+    async def test_update_post_accessible_with_posts_admin_own(self):
+        post = _make_post(id="post-abc", state="drafted")
+        updated_post = _make_post(id="post-abc", state="drafted")
+        access_token = _make_access_token(permissions=["posts:admin:own"])
+
+        mock_query = MagicMock()
+        mock_query.where.return_value = mock_query
+        mock_db = AsyncMock()
+        mock_db.execute.return_value = self._make_db_result(post)
+        mock_db_ctx = AsyncMock()
+        mock_db_ctx.__aenter__.return_value = mock_db
+        mock_db_ctx.__aexit__.return_value = False
+
+        with patch("app.mcp.posts.tools.get_access_token", return_value=access_token), \
+             patch("app.mcp.posts.tools.PostPolicy") as MockPolicy, \
+             patch("app.mcp.posts.tools.AsyncSessionLocal", return_value=mock_db_ctx), \
+             patch("app.mcp.posts.tools.UpdatePost") as MockUpdatePost:
+
+            mock_policy = MockPolicy.return_value
+            mock_policy.scope.return_value = mock_query
+            MockUpdatePost.return_value.perform_in = AsyncMock(return_value=updated_post)
+
+            result = await self._registered_tools()["update_post"]("post-abc", body="New Body")
+
+        assert result["id"] == "post-abc"

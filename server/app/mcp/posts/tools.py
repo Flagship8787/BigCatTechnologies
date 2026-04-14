@@ -6,12 +6,14 @@ from fastmcp.server.dependencies import get_access_token
 from app.auth.token import SessionToken
 from app.db import AsyncSessionLocal
 from app.domains.posts.create.operation import Operation as CreatePostInBlog
+from app.domains.posts.update.operation import Operation as UpdatePost
 from app.domains.posts.serializer import PostSerializer
 from app.mcp.posts.permissions import post_auth, POSTS_CREATE
 from app.models.post import Post
 from app.policies.post_policy import PostPolicy
 
 POSTS_READ = ("admin", "posts:admin", "posts:admin:own")
+POSTS_UPDATE = ("admin", "posts:admin", "posts:admin:own")
 
 
 def register(mcp: FastMCP):
@@ -53,3 +55,19 @@ def register(mcp: FastMCP):
         if post is None:
             raise ValueError(f"Post {post_id} not found")
         return PostSerializer(post).to_json()
+
+    @mcp.tool(auth=post_auth(*POSTS_UPDATE))
+    async def update_post(post_id: str, title: Optional[str] = None, body: Optional[str] = None) -> dict:
+        """Update the title and/or body of a drafted post. Raises an error if the post is published."""
+        access_token = get_access_token()
+        policy = PostPolicy(token=SessionToken(**access_token.claims))
+        query = policy.scope("update").where(Post.id == post_id)
+        async with AsyncSessionLocal() as db:
+            result = await db.execute(query)
+            post = result.scalars().first()
+            if post is None:
+                raise ValueError(f"Post {post_id} not found")
+            if post.state == "published":
+                raise ValueError(f"Post {post_id} is published and cannot be updated")
+            updated = await UpdatePost().perform_in(db, post=post, title=title, body=body)
+        return PostSerializer(updated).to_json()
