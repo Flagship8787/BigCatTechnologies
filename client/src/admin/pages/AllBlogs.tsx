@@ -33,7 +33,8 @@ export default function AllBlogs() {
           <TableHead>
             <TableRow>
               <TableCell>Name</TableCell>
-              <TableCell>Description</TableCell>
+              <TableCell>Author</TableCell>
+              <TableCell>Owner ID</TableCell>
               <TableCell>Created</TableCell>
               <TableCell>Updated</TableCell>
               <TableCell>Actions</TableCell>
@@ -43,7 +44,8 @@ export default function AllBlogs() {
             {blogs.map((blog) => (
               <TableRow key={blog.id}>
                 <TableCell>{blog.name}</TableCell>
-                <TableCell>{blog.description}</TableCell>
+                <TableCell>{blog.author_name}</TableCell>
+                <TableCell>{blog.owner_id}</TableCell>
                 <TableCell>{new Date(blog.created_at).toLocaleDateString()}</TableCell>
                 <TableCell>{new Date(blog.updated_at).toLocaleDateString()}</TableCell>
                 <TableCell>
