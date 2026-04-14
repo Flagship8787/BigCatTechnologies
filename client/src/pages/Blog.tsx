@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import '../App.css'
 import './Blog.css'
 import Nav from '../components/Nav'
+import bigcatLogo from '../assets/bigcat_logo.png'
 import type { Post } from '../dtos/Post'
 import { useFormatDate } from '../hooks/useFormatDate'
 
@@ -65,8 +66,9 @@ export default function Blog() {
   return (
     <div className="app">
       <header className="app-header">
-        <Link to="/" className="wordmark" style={{ textDecoration: 'none' }}>
-          BigCat Technologies
+        <Link to="/" className="wordmark-group" style={{ textDecoration: 'none' }}>
+          <img src={bigcatLogo} alt="BigCat Technologies logo" className="wordmark-logo" />
+          <span className="wordmark">BigCat Technologies</span>
         </Link>
         <Nav />
       </header>

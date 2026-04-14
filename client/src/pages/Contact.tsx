@@ -25,7 +25,7 @@ export default function Contact() {
         <section className="contact-body">
           <p>
             Have a project in mind? A question about the work? Just want to say hi?
-            Drop an email — Sam reads everything.
+            Drop an email.
           </p>
           <a href={`mailto:${email}`} className="contact-email-link">
             {email}

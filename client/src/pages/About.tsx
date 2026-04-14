@@ -72,8 +72,8 @@ export default function About() {
               agents do real work — not party tricks.
             </p>
             <p>
-              When not shipping code, you'll find Sam playing piano and listening to jazz.
-              (Miles Davis, Bill Evans, Thelonious Monk — the good stuff.)
+              When not shipping code, you'll find Sam on a mountain — rock or ice, it doesn't
+              matter. An avid climber for years, he's happiest when the route goes up.
             </p>
           </div>
 
