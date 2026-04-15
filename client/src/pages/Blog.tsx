@@ -6,6 +6,7 @@ import Nav from '../components/Nav'
 import bigcatLogo from '../assets/bigcat_logo.png'
 import type { Post } from '../dtos/Post'
 import { useFormatDate } from '../hooks/useFormatDate'
+import { stripMarkdown } from '../utils/stripMarkdown'
 
 const BLOG_ID = 'd269d2a7-eecd-4cbf-b6e5-a48025933c7f'
 const API_URL = import.meta.env.VITE_API_URL ?? ''
@@ -21,7 +22,8 @@ interface BlogData {
 
 function PostPreview({ post }: { post: Post }) {
   const { formatDate } = useFormatDate()
-  const preview = post.body.length > 280 ? post.body.slice(0, 280).trimEnd() + '…' : post.body
+  const plain = stripMarkdown(post.body)
+  const preview = plain.length > 280 ? plain.slice(0, 280).trimEnd() + '…' : plain
 
   return (
     <article className="blog-post-preview">
