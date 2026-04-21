@@ -19,24 +19,13 @@ import { PageContainer } from '@toolpad/core/PageContainer'
 import AddIcon from '@mui/icons-material/Add'
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline'
 import PublishIcon from '@mui/icons-material/Publish'
-import type { Blog, BlogWithPosts } from '../../dtos/Blog'
+import { useBlogs } from '../../hooks/admin/useBlogs'
+import { usePost } from '../../hooks/admin/usePost'
+import { useMarkdown } from '../../hooks/useMarkdown'
+import type { BlogWithPosts } from '../../dtos/Blog'
 import type { Post } from '../../dtos/Post'
 
 const API_URL = import.meta.env.VITE_API_URL ?? ''
-
-function stripMarkdown(text: string): string {
-  return text
-    .replace(/```[\s\S]*?```/g, '')
-    .replace(/`[^`]*`/g, '')
-    .replace(/!\[.*?\]\(.*?\)/g, '')
-    .replace(/\[([^\]]+)\]\(.*?\)/g, '$1')
-    .replace(/#{1,6}\s+/g, '')
-    .replace(/[*_]{1,2}([^*_]+)[*_]{1,2}/g, '$1')
-    .replace(/^\s*[-*+]\s+/gm, '')
-    .replace(/^\s*\d+\.\s+/gm, '')
-    .replace(/\n{2,}/g, '\n')
-    .trim()
-}
 
 function formatRelative(dateStr: string): string {
   const now = Date.now()
@@ -51,17 +40,16 @@ function formatRelative(dateStr: string): string {
   return `${diffDays}d ago`
 }
 
-interface AllPostsData {
-  blogs: Blog[]
-  posts: Post[]
-  blogMap: Record<string, string>
-}
-
 export default function Dashboard() {
   const navigate = useNavigate()
   const { getAccessTokenSilently, user } = useAuth0()
+  const { strip } = useMarkdown()
+  const { blogs, fetchBlogs } = useBlogs()
+  const { publish } = usePost()
+
   const [permissions, setPermissions] = useState<string[] | null>(null)
-  const [data, setData] = useState<AllPostsData | null>(null)
+  const [posts, setPosts] = useState<Post[]>([])
+  const [blogMap, setBlogMap] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [publishingId, setPublishingId] = useState<string | null>(null)
@@ -82,14 +70,10 @@ export default function Dashboard() {
       const perms = payload.permissions
       setPermissions(Array.isArray(perms) ? perms : [])
 
-      // Fetch all blogs
-      const blogsRes = await fetch(`${API_URL}/admin/blogs`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      if (!blogsRes.ok) throw new Error(`Blogs: server returned ${blogsRes.status}`)
-      const blogs = await blogsRes.json() as Blog[]
+      // Fetch all blogs via hook
+      await fetchBlogs()
 
-      // Fetch posts for each blog
+      // Fetch posts for each blog (need BlogWithPosts)
       const blogWithPostsResults = await Promise.all(
         blogs.map((blog) =>
           fetch(`${API_URL}/admin/blogs/${blog.id}`, {
@@ -100,43 +84,40 @@ export default function Dashboard() {
         )
       )
 
-      const blogMap: Record<string, string> = {}
+      const newBlogMap: Record<string, string> = {}
       const allPosts: Post[] = []
       for (const result of blogWithPostsResults) {
         if (result) {
-          blogMap[result.id] = result.name
+          newBlogMap[result.id] = result.name
           allPosts.push(...result.posts)
         }
       }
 
-      setData({ blogs, posts: allPosts, blogMap })
+      setBlogMap(newBlogMap)
+      setPosts(allPosts)
     } catch (err) {
       setError((err as Error).message)
     } finally {
       setLoading(false)
     }
-  }, [getAccessTokenSilently])
+  }, [getAccessTokenSilently, fetchBlogs, blogs])
 
   useEffect(() => {
     void fetchData()
-  }, [fetchData])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
-  const handlePublish = async (postId: string) => {
+  const handlePublish = useCallback(async (postId: string) => {
     setPublishingId(postId)
     try {
-      const token = await getAccessTokenSilently()
-      const res = await fetch(`${API_URL}/admin/posts/${postId}/publish`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      if (!res.ok) throw new Error(`Server returned ${res.status}`)
+      await publish(postId)
       await fetchData()
     } catch (err) {
       console.error('Publish failed:', err)
     } finally {
       setPublishingId(null)
     }
-  }
+  }, [publish, fetchData])
 
   if (loading) {
     return (
@@ -148,15 +129,14 @@ export default function Dashboard() {
     )
   }
 
-  if (error || !data) {
+  if (error) {
     return (
       <PageContainer title="Dashboard">
-        <Typography color="error">{error ?? 'Failed to load data'}</Typography>
+        <Typography color="error">{error}</Typography>
       </PageContainer>
     )
   }
 
-  const { blogs, posts, blogMap } = data
   const draftCount = posts.filter((p) => p.state === 'drafted').length
   const publishedCount = posts.filter((p) => p.state === 'published').length
   const recentPosts = [...posts].sort(
@@ -254,7 +234,7 @@ export default function Dashboard() {
             <List disablePadding>
               {recentPosts.map((post, idx) => {
                 const isPublished = post.state === 'published'
-                const preview = stripMarkdown(post.body).slice(0, 200)
+                const preview = strip(post.body).slice(0, 200)
                 const blogName = blogMap[post.blog_id] ?? 'Unknown'
 
                 return (

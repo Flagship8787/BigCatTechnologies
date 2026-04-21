@@ -1,4 +1,4 @@
-export function stripMarkdown(text: string): string {
+function stripMarkdown(text: string): string {
   return text
     .replace(/^#{1,6}\s+/gm, '')        // headings
     .replace(/\*\*(.+?)\*\*/g, '$1')    // bold
@@ -10,4 +10,8 @@ export function stripMarkdown(text: string): string {
     .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1') // links → label only
     .replace(/\n{2,}/g, '\n')           // collapse blank lines
     .trim()
+}
+
+export function useMarkdown() {
+  return { strip: stripMarkdown }
 }
