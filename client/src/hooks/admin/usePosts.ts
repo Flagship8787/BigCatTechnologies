@@ -31,7 +31,6 @@ export function usePosts() {
             headers: { Authorization: `Bearer ${token}` },
           })
             .then((r) => (r.ok ? (r.json() as Promise<BlogWithPosts>) : null))
-            .catch(() => null)
         )
       )
       const newBlogMap: Record<string, string> = {}
