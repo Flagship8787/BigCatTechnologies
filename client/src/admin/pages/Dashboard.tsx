@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate, Link as RouterLink } from 'react-router-dom'
 import { useAuth0 } from '@auth0/auth0-react'
 import {
@@ -19,11 +19,11 @@ import { PageContainer } from '@toolpad/core/PageContainer'
 import AddIcon from '@mui/icons-material/Add'
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline'
 import PublishIcon from '@mui/icons-material/Publish'
-import { useBlogs } from '../../hooks/admin/useBlogs'
-import { usePost } from '../../hooks/admin/usePost'
-import { useMarkdown } from '../../hooks/useMarkdown'
 import type { BlogWithPosts } from '../../dtos/Blog'
 import type { Post } from '../../dtos/Post'
+import { useMarkdown } from '../../hooks/useMarkdown'
+import { useBlogs } from '../../hooks/admin/useBlogs'
+import { usePost } from '../../hooks/admin/usePost'
 
 const API_URL = import.meta.env.VITE_API_URL ?? ''
 
@@ -40,84 +40,89 @@ function formatRelative(dateStr: string): string {
   return `${diffDays}d ago`
 }
 
+function decodeJwtPayload(token: string): Record<string, unknown> {
+  const payload = token.split('.')[1]
+  return JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/')))
+}
+
 export default function Dashboard() {
   const navigate = useNavigate()
   const { getAccessTokenSilently, user } = useAuth0()
-  const { strip } = useMarkdown()
-  const { blogs, fetchBlogs } = useBlogs()
-  const { publish } = usePost()
-
   const [permissions, setPermissions] = useState<string[] | null>(null)
   const [posts, setPosts] = useState<Post[]>([])
   const [blogMap, setBlogMap] = useState<Record<string, string>>({})
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [detailsLoading, setDetailsLoading] = useState(true)
   const [publishingId, setPublishingId] = useState<string | null>(null)
 
-  function decodeJwtPayload(token: string): Record<string, unknown> {
-    const payload = token.split('.')[1]
-    return JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/')))
-  }
+  const { blogs, error: blogsError, loading: blogsLoading, fetchBlogs } = useBlogs()
+  const { publish } = usePost()
+  const { strip } = useMarkdown()
 
-  const fetchData = useCallback(async () => {
-    setLoading(true)
-    setError(null)
-    try {
-      const token = await getAccessTokenSilently()
+  // Decode permissions on mount
+  useEffect(() => {
+    getAccessTokenSilently()
+      .then((token) => {
+        const payload = decodeJwtPayload(token)
+        const perms = payload.permissions
+        setPermissions(Array.isArray(perms) ? perms : [])
+      })
+      .catch(() => setPermissions([]))
+  }, [getAccessTokenSilently])
 
-      // Decode permissions from JWT
-      const payload = decodeJwtPayload(token)
-      const perms = payload.permissions
-      setPermissions(Array.isArray(perms) ? perms : [])
+  // Fetch blogs on mount
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { void fetchBlogs() }, [])
 
-      // Fetch all blogs via hook
-      await fetchBlogs()
-
-      // Fetch posts for each blog (need BlogWithPosts)
-      const blogWithPostsResults = await Promise.all(
-        blogs.map((blog) =>
-          fetch(`${API_URL}/admin/blogs/${blog.id}`, {
-            headers: { Authorization: `Bearer ${token}` },
-          })
-            .then((r) => (r.ok ? r.json() as Promise<BlogWithPosts> : null))
-            .catch(() => null)
+  // Fetch individual blog details (with posts) once blogs list is loaded
+  useEffect(() => {
+    if (blogsLoading) return
+    if (blogs.length === 0) {
+      setDetailsLoading(false)
+      return
+    }
+    setDetailsLoading(true)
+    getAccessTokenSilently()
+      .then((token) =>
+        Promise.all(
+          blogs.map((blog) =>
+            fetch(`${API_URL}/admin/blogs/${blog.id}`, {
+              headers: { Authorization: `Bearer ${token}` },
+            })
+              .then((r) => (r.ok ? (r.json() as Promise<BlogWithPosts>) : null))
+              .catch(() => null)
+          )
         )
       )
-
-      const newBlogMap: Record<string, string> = {}
-      const allPosts: Post[] = []
-      for (const result of blogWithPostsResults) {
-        if (result) {
-          newBlogMap[result.id] = result.name
-          allPosts.push(...result.posts)
+      .then((results) => {
+        const newBlogMap: Record<string, string> = {}
+        const allPosts: Post[] = []
+        for (const result of results) {
+          if (result) {
+            newBlogMap[result.id] = result.name
+            allPosts.push(...result.posts)
+          }
         }
-      }
+        setBlogMap(newBlogMap)
+        setPosts(allPosts)
+        setDetailsLoading(false)
+      })
+      .catch(() => setDetailsLoading(false))
+  }, [blogs, blogsLoading, getAccessTokenSilently])
 
-      setBlogMap(newBlogMap)
-      setPosts(allPosts)
-    } catch (err) {
-      setError((err as Error).message)
-    } finally {
-      setLoading(false)
-    }
-  }, [getAccessTokenSilently, fetchBlogs, blogs])
-
-  useEffect(() => {
-    void fetchData()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  const handlePublish = useCallback(async (postId: string) => {
+  const handlePublish = async (postId: string) => {
     setPublishingId(postId)
     try {
       await publish(postId)
-      await fetchData()
+      void fetchBlogs()
     } catch (err) {
       console.error('Publish failed:', err)
     } finally {
       setPublishingId(null)
     }
-  }, [publish, fetchData])
+  }
+
+  const loading = blogsLoading || detailsLoading
+  const error = blogsError
 
   if (loading) {
     return (
