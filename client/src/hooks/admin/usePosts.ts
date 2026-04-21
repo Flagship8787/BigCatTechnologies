@@ -1,23 +1,22 @@
 import { useState } from 'react'
 import { useAuth0 } from '@auth0/auth0-react'
-import type { Blog } from '../../dtos/Blog'
+import type { Blog, BlogWithPosts } from '../../dtos/Blog'
 import type { Post } from '../../dtos/Post'
-import type { BlogWithPosts } from '../../dtos/Blog'
 
 const API_URL = import.meta.env.VITE_API_URL ?? ''
 
-export interface AllPostsResult {
+export interface PostsResult {
   posts: Post[]
   blogMap: Record<string, string>
 }
 
-export function useAllPosts() {
-  const [result, setResult] = useState<AllPostsResult>({ posts: [], blogMap: {} })
+export function usePosts() {
+  const [result, setResult] = useState<PostsResult>({ posts: [], blogMap: {} })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const { getAccessTokenSilently } = useAuth0()
 
-  async function fetchAllPosts(blogs: Blog[]) {
+  async function fetchPosts(blogs: Blog[]) {
     if (blogs.length === 0) {
       setResult({ posts: [], blogMap: {} })
       return
@@ -51,5 +50,5 @@ export function useAllPosts() {
     }
   }
 
-  return { ...result, loading, error, fetchAllPosts }
+  return { ...result, loading, error, fetchPosts }
 }

@@ -22,7 +22,7 @@ import PublishIcon from '@mui/icons-material/Publish'
 import { useMarkdown } from '../../hooks/useMarkdown'
 import { useDate } from '../../hooks/useDate'
 import { useBlogs } from '../../hooks/admin/useBlogs'
-import { useAllPosts } from '../../hooks/admin/useAllPosts'
+import { usePosts } from '../../hooks/admin/usePosts'
 import { usePost } from '../../hooks/admin/usePost'
 
 function decodeJwtPayload(token: string): Record<string, unknown> {
@@ -36,7 +36,7 @@ export default function Dashboard() {
   const { strip } = useMarkdown()
   const { formatRelative } = useDate()
   const { blogs, error: blogsError, loading: blogsLoading, fetchBlogs } = useBlogs()
-  const { posts, blogMap, loading: postsLoading, fetchAllPosts } = useAllPosts()
+  const { posts, blogMap, loading: postsLoading, fetchPosts } = usePosts()
   const { publish } = usePost()
 
   const [permissions, setPermissions] = useState<string[] | null>(null)
@@ -60,7 +60,7 @@ export default function Dashboard() {
   // Fetch all posts once blogs list is loaded
   useEffect(() => {
     if (!blogsLoading) {
-      void fetchAllPosts(blogs)
+      void fetchPosts(blogs)
     }
   }, [blogs, blogsLoading]) // eslint-disable-line react-hooks/exhaustive-deps
 
