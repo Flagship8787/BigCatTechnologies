@@ -19,26 +19,11 @@ import { PageContainer } from '@toolpad/core/PageContainer'
 import AddIcon from '@mui/icons-material/Add'
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline'
 import PublishIcon from '@mui/icons-material/Publish'
-import type { BlogWithPosts } from '../../dtos/Blog'
-import type { Post } from '../../dtos/Post'
 import { useMarkdown } from '../../hooks/useMarkdown'
+import { useDate } from '../../hooks/useDate'
 import { useBlogs } from '../../hooks/admin/useBlogs'
+import { useAllPosts } from '../../hooks/admin/useAllPosts'
 import { usePost } from '../../hooks/admin/usePost'
-
-const API_URL = import.meta.env.VITE_API_URL ?? ''
-
-function formatRelative(dateStr: string): string {
-  const now = Date.now()
-  const then = new Date(dateStr).getTime()
-  const diffMs = now - then
-  const diffMins = Math.floor(diffMs / 60000)
-  if (diffMins < 1) return 'just now'
-  if (diffMins < 60) return `${diffMins}m ago`
-  const diffHours = Math.floor(diffMins / 60)
-  if (diffHours < 24) return `${diffHours}h ago`
-  const diffDays = Math.floor(diffHours / 24)
-  return `${diffDays}d ago`
-}
 
 function decodeJwtPayload(token: string): Record<string, unknown> {
   const payload = token.split('.')[1]
@@ -48,15 +33,14 @@ function decodeJwtPayload(token: string): Record<string, unknown> {
 export default function Dashboard() {
   const navigate = useNavigate()
   const { getAccessTokenSilently, user } = useAuth0()
-  const [permissions, setPermissions] = useState<string[] | null>(null)
-  const [posts, setPosts] = useState<Post[]>([])
-  const [blogMap, setBlogMap] = useState<Record<string, string>>({})
-  const [detailsLoading, setDetailsLoading] = useState(true)
-  const [publishingId, setPublishingId] = useState<string | null>(null)
-
-  const { blogs, error: blogsError, loading: blogsLoading, fetchBlogs } = useBlogs()
-  const { publish } = usePost()
   const { strip } = useMarkdown()
+  const { formatRelative } = useDate()
+  const { blogs, error: blogsError, loading: blogsLoading, fetchBlogs } = useBlogs()
+  const { posts, blogMap, loading: postsLoading, fetchAllPosts } = useAllPosts()
+  const { publish } = usePost()
+
+  const [permissions, setPermissions] = useState<string[] | null>(null)
+  const [publishingId, setPublishingId] = useState<string | null>(null)
 
   // Decode permissions on mount
   useEffect(() => {
@@ -73,41 +57,12 @@ export default function Dashboard() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { void fetchBlogs() }, [])
 
-  // Fetch individual blog details (with posts) once blogs list is loaded
+  // Fetch all posts once blogs list is loaded
   useEffect(() => {
-    if (blogsLoading) return
-    if (blogs.length === 0) {
-      setDetailsLoading(false)
-      return
+    if (!blogsLoading) {
+      void fetchAllPosts(blogs)
     }
-    setDetailsLoading(true)
-    getAccessTokenSilently()
-      .then((token) =>
-        Promise.all(
-          blogs.map((blog) =>
-            fetch(`${API_URL}/admin/blogs/${blog.id}`, {
-              headers: { Authorization: `Bearer ${token}` },
-            })
-              .then((r) => (r.ok ? (r.json() as Promise<BlogWithPosts>) : null))
-              .catch(() => null)
-          )
-        )
-      )
-      .then((results) => {
-        const newBlogMap: Record<string, string> = {}
-        const allPosts: Post[] = []
-        for (const result of results) {
-          if (result) {
-            newBlogMap[result.id] = result.name
-            allPosts.push(...result.posts)
-          }
-        }
-        setBlogMap(newBlogMap)
-        setPosts(allPosts)
-        setDetailsLoading(false)
-      })
-      .catch(() => setDetailsLoading(false))
-  }, [blogs, blogsLoading, getAccessTokenSilently])
+  }, [blogs, blogsLoading]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handlePublish = async (postId: string) => {
     setPublishingId(postId)
@@ -121,7 +76,7 @@ export default function Dashboard() {
     }
   }
 
-  const loading = blogsLoading || detailsLoading
+  const loading = blogsLoading || postsLoading
   const error = blogsError
 
   if (loading) {
