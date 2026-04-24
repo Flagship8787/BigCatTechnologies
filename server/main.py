@@ -5,14 +5,18 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.controllers import health as health_controller
 from app.controllers import blogs as blogs_controller
 from app.controllers import posts as posts_controller
+from app.controllers import auth as auth_controller
+from app.controllers import social as social_controller
 from app.controllers.admin import blogs as admin_blogs_controller
 from app.controllers.admin import posts as admin_posts_controller
 
 from app.mcp.posts import tools as mcp_tools
+from app.mcp.linkedin import tools as mcp_linkedin_tools
 from app.mcp.auth import auth
 
 mcp = FastMCP('Big Cat Technologies', auth=auth)
 mcp_tools.register(mcp)
+mcp_linkedin_tools.register(mcp)
 
 mcp_app = mcp.http_app(path='/mcp', stateless_http=True)
 
@@ -31,6 +35,8 @@ app.add_middleware(
 health_controller.register(app)
 blogs_controller.register(app)
 posts_controller.register(app)
+auth_controller.register(app)
+social_controller.register(app)
 admin_blogs_controller.register(app)
 admin_posts_controller.register(app)
 
