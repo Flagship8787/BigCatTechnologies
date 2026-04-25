@@ -23,8 +23,8 @@ def upgrade() -> None:
         'users',
         sa.Column('id', sa.String(36), primary_key=True),
         sa.Column('auth0_id', sa.String(255), nullable=False),
-        sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
-        sa.Column('updated_at', sa.DateTime(timezone=True), nullable=False),
+        sa.Column('created_at', sa.DateTime, nullable=False),
+        sa.Column('updated_at', sa.DateTime, nullable=False),
     )
     op.create_index('ix_users_auth0_id', 'users', ['auth0_id'], unique=True)
 
@@ -35,10 +35,10 @@ def upgrade() -> None:
         sa.Column('provider', sa.String(50), nullable=False),
         sa.Column('access_token', sa.Text, nullable=False),
         sa.Column('refresh_token', sa.Text, nullable=True),
-        sa.Column('expires_at', sa.DateTime(timezone=True), nullable=True),
+        sa.Column('expires_at', sa.DateTime, nullable=True),
         sa.Column('provider_user_id', sa.String(255), nullable=True),
-        sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
-        sa.Column('updated_at', sa.DateTime(timezone=True), nullable=False),
+        sa.Column('created_at', sa.DateTime, nullable=False),
+        sa.Column('updated_at', sa.DateTime, nullable=False),
         sa.UniqueConstraint('user_id', 'provider', name='uq_social_tokens_user_provider'),
     )
 
