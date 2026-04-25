@@ -19,5 +19,6 @@ class User(Base):
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     auth0_id: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow, nullable=False)
 
     social_tokens: Mapped[List["SocialToken"]] = relationship("SocialToken", back_populates="user", cascade="all, delete-orphan")

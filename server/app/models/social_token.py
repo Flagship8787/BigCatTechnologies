@@ -24,5 +24,7 @@ class SocialToken(Base):
     refresh_token: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     expires_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
     provider_user_id: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow, nullable=False)
 
     user: Mapped["User"] = relationship("User", back_populates="social_tokens")
