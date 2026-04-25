@@ -5,9 +5,12 @@ import httpx
 from fastapi import Depends, HTTPException, Security
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import jwt, JWTError
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.deserializer import Deserializer
 from app.auth.token import SessionToken
+from app.db import get_db
+from app.domains.users.find_or_create.operation import Operation as FindOrCreateUserOperation
 
 _bearer = HTTPBearer()
 
@@ -27,6 +30,7 @@ async def _get_jwks() -> dict:
 
 async def require_auth0_token(
     credentials: HTTPAuthorizationCredentials = Security(_bearer),
+    db: AsyncSession = Depends(get_db),
 ) -> SessionToken:
     token = credentials.credentials
     jwks = await _get_jwks()
@@ -64,7 +68,9 @@ async def require_auth0_token(
     except JWTError:
         raise HTTPException(status_code=401, detail="Invalid token")
 
-    return Deserializer(payload).deserialize()
+    session_token = Deserializer(payload).deserialize()
+    await FindOrCreateUserOperation().perform_in(db, auth0_id=session_token.sub)
+    return session_token
 
 
 def get_blog_policy(token: SessionToken = Depends(require_auth0_token)):
