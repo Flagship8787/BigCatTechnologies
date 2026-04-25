@@ -181,6 +181,7 @@ result = await SomeOperation().perform(arg1=val1, arg2=val2)
 - Abstract methods use `...` stubs, not `raise NotImplementedError`
 - No error dicts returned from operations — use exceptions (`ValidationError`)
 - Keep each class focused: validators validate, operations operate, serializers serialize
+- **DateTime columns**: always use `DateTime` (no timezone) unless explicitly specified otherwise. Do NOT use `DateTime(timezone=True)`. This applies to all models including `created_at`, `updated_at`, and any other timestamp fields.
 <!-- GSD:conventions-end -->
 
 <!-- GSD:architecture-start source:ARCHITECTURE.md -->
