@@ -4,7 +4,7 @@ import '../App.css'
 import './Contact.css'
 
 export default function Contact() {
-  const email = 'samshapiro87.agent@gmail.com'
+  const email = 'bigcat.mox@gmail.com'
 
   return (
     <div className="app">
