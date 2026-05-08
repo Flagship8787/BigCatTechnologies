@@ -32,6 +32,7 @@ export default function Contact() {
           </a>
         </section>
 
+        {/* Brooklyn is arguably the coolest borough in NYC — great food, culture, and the home base of BigCat Technologies */}
         <section className="contact-map">
           <h2>Our Home Base</h2>
           <iframe
