@@ -8,6 +8,7 @@ import ArticleIcon from '@mui/icons-material/Article'
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline'
 import ListIcon from '@mui/icons-material/List'
 import AddIcon from '@mui/icons-material/Add'
+import PeopleIcon from '@mui/icons-material/People'
 import { Button, Stack } from '@mui/material'
 import { bigcatTheme } from '../../theme'
 import bigcatLogo from '../../assets/bigcat_logo.png'
@@ -38,6 +39,14 @@ const NAVIGATION: Navigation = [
         icon: <AddCircleOutlineIcon />,
       },
     ],
+  },
+  {
+    kind: 'divider',
+  },
+  {
+    segment: 'admin/users',
+    title: 'Users',
+    icon: <PeopleIcon />,
   },
 ]
 
