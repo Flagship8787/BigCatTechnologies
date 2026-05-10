@@ -81,3 +81,8 @@ def get_blog_policy(token: SessionToken = Depends(require_auth0_token)):
 def get_post_policy(token: SessionToken = Depends(require_auth0_token)):
     from app.policies.post_policy import PostPolicy
     return PostPolicy(token=token)
+
+
+def get_user_policy(token: SessionToken = Depends(require_auth0_token)):
+    from app.policies.user_policy import UserPolicy
+    return UserPolicy(token=token)

@@ -1,11 +1,10 @@
 from fastapi import FastAPI, Depends
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.auth.dependencies import require_auth0_token
-from app.auth.token import SessionToken
+from app.auth.dependencies import get_user_policy
 from app.db import get_db
 from app.models.user import User
+from app.policies.user_policy import UserPolicy
 
 
 def register(app: FastAPI):
@@ -13,9 +12,9 @@ def register(app: FastAPI):
     @app.get("/admin/users")
     async def list_users(
         db: AsyncSession = Depends(get_db),
-        token: SessionToken = Depends(require_auth0_token),
+        policy: UserPolicy = Depends(get_user_policy),
     ):
-        query = select(User).order_by(User.created_at.desc())
+        query = policy.scope("read").order_by(User.created_at.desc())
         result = await db.execute(query)
         users = result.scalars().all()
         return [
