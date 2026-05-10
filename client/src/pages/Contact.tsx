@@ -31,19 +31,6 @@ export default function Contact() {
             {email}
           </a>
         </section>
-
-        {/* Brooklyn is arguably the coolest borough in NYC — great food, culture, and the home base of BigCat Technologies */}
-        <section className="contact-map">
-          <h2>Our Home Base</h2>
-          <iframe
-            title="Brooklyn, NY"
-            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d96708.34051685308!2d-74.03927096022435!3d40.650002059567516!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89c24416947c2109%3A0x82765c7404007886!2sBrooklyn%2C%20NY!5e0!3m2!1sen!2sus!4v1715000000000!5m2!1sen!2sus"
-            className="contact-map-iframe"
-            allowFullScreen
-            loading="lazy"
-            referrerPolicy="no-referrer-when-downgrade"
-          />
-        </section>
       </main>
 
       <footer className="app-footer">
