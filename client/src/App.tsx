@@ -7,6 +7,7 @@ import Dashboard from './admin/pages/Dashboard'
 import Blog from './pages/Blog'
 import PostDetail from './pages/PostDetail'
 import AllBlogs from './admin/pages/AllBlogs'
+import AllUsers from './admin/pages/AllUsers'
 import BlogDetail from './admin/pages/BlogDetail'
 import CreateBlog from './admin/pages/CreateBlog'
 import NewPost from './admin/pages/NewPost'
@@ -70,6 +71,7 @@ export default function App() {
         <Route path="/admin/blogs/:blogId/posts/new" element={<NewPost />} />
         <Route path="/admin/posts/:postId" element={<PostDetails />} />
         <Route path="/admin/posts/:postId/edit" element={<EditPost />} />
+        <Route path="/admin/users" element={<AllUsers />} />
       </Route>
     </Routes>
   )
