@@ -43,6 +43,12 @@ def users_admin_app(db_session: AsyncSession) -> FastAPI:
     return _make_admin_app(db_session, permissions=["admin"])
 
 
+@pytest.fixture
+def no_scope_users_admin_app(db_session: AsyncSession) -> FastAPI:
+    """Admin app with a token that has no recognized permissions."""
+    return _make_admin_app(db_session, permissions=[])
+
+
 @pytest.mark.asyncio
 async def test_list_users_returns_200(users_admin_app: FastAPI):
     async with httpx.AsyncClient(
@@ -103,3 +109,13 @@ async def test_list_users_returns_correct_fields(users_admin_app: FastAPI, db_se
     assert len(body) == 1
     user = body[0]
     assert set(user.keys()) == {"id", "auth0_id", "created_at", "updated_at"}
+
+
+@pytest.mark.asyncio
+async def test_list_users_returns_403_without_valid_scope(no_scope_users_admin_app: FastAPI):
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=no_scope_users_admin_app), base_url="http://test"
+    ) as client:
+        response = await client.get("/admin/users")
+
+    assert response.status_code == 403

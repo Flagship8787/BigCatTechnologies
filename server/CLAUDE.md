@@ -1,3 +1,17 @@
+## Python Environment
+
+This project uses `pyenv` with a virtualenv named `bigcattechnologies` (Python 3.14.3).
+Claude Code does **not** load the native shell environment automatically — you must activate it explicitly before running any Python commands:
+
+```bash
+export PYENV_ROOT="$HOME/.pyenv"
+export PATH="$PYENV_ROOT/bin:$PATH"
+eval "$(pyenv init -)"
+pyenv activate bigcattechnologies
+```
+
+Always do this before running `pytest`, `python`, `pip`, or any other Python tooling.
+
 <!-- GSD:project-start source:PROJECT.md -->
 ## Project
 
