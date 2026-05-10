@@ -10,7 +10,8 @@ from app.controllers.posts import register as register_posts
 from app.controllers.admin.blogs import register as register_admin_blogs
 from app.models.blog import Blog
 from app.models.post import Post
-from tests.factories import BlogFactory, PostFactory
+from app.models.user import User
+from tests.factories import BlogFactory, PostFactory, UserFactory
 
 TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
 
@@ -64,6 +65,15 @@ async def create_blog(db: AsyncSession, **kwargs) -> Blog:
     await db.commit()
     await db.refresh(blog)
     return blog
+
+
+async def create_user(db: AsyncSession, **kwargs) -> User:
+    """Create and persist a User using UserFactory defaults, with optional overrides."""
+    user = UserFactory.build(**kwargs)
+    db.add(user)
+    await db.commit()
+    await db.refresh(user)
+    return user
 
 
 async def create_post(db: AsyncSession, blog: Blog = None, **kwargs) -> Post:
