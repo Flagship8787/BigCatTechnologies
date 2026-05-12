@@ -21,6 +21,10 @@ def register(app: FastAPI):
             {
                 "id": u.id,
                 "auth0_id": u.auth0_id,
+                "email": u.email,
+                "email_verified": u.email_verified,
+                "name": u.name,
+                "picture": u.picture,
                 "created_at": u.created_at.isoformat(),
                 "updated_at": u.updated_at.isoformat(),
             }
