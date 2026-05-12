@@ -6,6 +6,7 @@ from fastapi import HTTPException
 from fastapi.security import HTTPAuthorizationCredentials
 from sqlalchemy.ext.asyncio import AsyncSession
 
+import app.auth.dependencies as deps
 from app.auth.dependencies import require_auth0_token
 from app.auth.token import SessionToken
 
@@ -47,10 +48,9 @@ def make_credentials(token: str = "mock.jwt.token") -> HTTPAuthorizationCredenti
 @pytest.fixture(autouse=True)
 def reset_jwks_cache():
     """Reset the JWKS cache between tests to avoid cross-test pollution."""
-    import app.auth.dependencies as deps
-    deps._jwks_cache = None
+    deps._auth_service._jwks_cache = None
     yield
-    deps._jwks_cache = None
+    deps._auth_service._jwks_cache = None
 
 
 class TestRequireAuth0TokenCallsFindOrCreateUser:
@@ -60,9 +60,9 @@ class TestRequireAuth0TokenCallsFindOrCreateUser:
     async def test_calls_find_or_create_with_sub_from_token(self, db_session: AsyncSession):
         with (
             patch.dict(os.environ, MOCK_ENV),
-            patch("app.auth.dependencies._get_jwks", new=AsyncMock(return_value=MOCK_JWKS)),
-            patch("app.auth.dependencies.jwt.get_unverified_header", return_value={"kid": "test-key-id"}),
-            patch("app.auth.dependencies.jwt.decode", return_value=MOCK_PAYLOAD),
+            patch.object(deps._auth_service, "get_jwks", new=AsyncMock(return_value=MOCK_JWKS)),
+            patch("app.auth.service.jwt.get_unverified_header", return_value={"kid": "test-key-id"}),
+            patch("app.auth.service.jwt.decode", return_value=MOCK_PAYLOAD),
             patch("app.auth.dependencies.FindOrCreateUserOperation") as MockOperation,
         ):
             mock_instance = MagicMock()
@@ -81,9 +81,9 @@ class TestRequireAuth0TokenCallsFindOrCreateUser:
     async def test_passes_db_session_to_find_or_create(self, db_session: AsyncSession):
         with (
             patch.dict(os.environ, MOCK_ENV),
-            patch("app.auth.dependencies._get_jwks", new=AsyncMock(return_value=MOCK_JWKS)),
-            patch("app.auth.dependencies.jwt.get_unverified_header", return_value={"kid": "test-key-id"}),
-            patch("app.auth.dependencies.jwt.decode", return_value=MOCK_PAYLOAD),
+            patch.object(deps._auth_service, "get_jwks", new=AsyncMock(return_value=MOCK_JWKS)),
+            patch("app.auth.service.jwt.get_unverified_header", return_value={"kid": "test-key-id"}),
+            patch("app.auth.service.jwt.decode", return_value=MOCK_PAYLOAD),
             patch("app.auth.dependencies.FindOrCreateUserOperation") as MockOperation,
         ):
             mock_instance = MagicMock()
@@ -105,9 +105,9 @@ class TestRequireAuth0TokenCallsFindOrCreateUser:
 
         with (
             patch.dict(os.environ, MOCK_ENV),
-            patch("app.auth.dependencies._get_jwks", new=AsyncMock(return_value=MOCK_JWKS)),
-            patch("app.auth.dependencies.jwt.get_unverified_header", return_value={"kid": "test-key-id"}),
-            patch("app.auth.dependencies.jwt.decode", return_value=payload),
+            patch.object(deps._auth_service, "get_jwks", new=AsyncMock(return_value=MOCK_JWKS)),
+            patch("app.auth.service.jwt.get_unverified_header", return_value={"kid": "test-key-id"}),
+            patch("app.auth.service.jwt.decode", return_value=payload),
             patch("app.auth.dependencies.FindOrCreateUserOperation") as MockOperation,
         ):
             mock_instance = MagicMock()
@@ -125,9 +125,9 @@ class TestRequireAuth0TokenCallsFindOrCreateUser:
     async def test_returns_session_token_after_find_or_create(self, db_session: AsyncSession):
         with (
             patch.dict(os.environ, MOCK_ENV),
-            patch("app.auth.dependencies._get_jwks", new=AsyncMock(return_value=MOCK_JWKS)),
-            patch("app.auth.dependencies.jwt.get_unverified_header", return_value={"kid": "test-key-id"}),
-            patch("app.auth.dependencies.jwt.decode", return_value=MOCK_PAYLOAD),
+            patch.object(deps._auth_service, "get_jwks", new=AsyncMock(return_value=MOCK_JWKS)),
+            patch("app.auth.service.jwt.get_unverified_header", return_value={"kid": "test-key-id"}),
+            patch("app.auth.service.jwt.decode", return_value=MOCK_PAYLOAD),
             patch("app.auth.dependencies.FindOrCreateUserOperation") as MockOperation,
         ):
             mock_instance = MagicMock()
@@ -152,8 +152,8 @@ class TestRequireAuth0TokenDoesNotCallFindOrCreateOnError:
 
         with (
             patch.dict(os.environ, MOCK_ENV),
-            patch("app.auth.dependencies._get_jwks", new=AsyncMock(return_value=MOCK_JWKS)),
-            patch("app.auth.dependencies.jwt.get_unverified_header", side_effect=JWTError("bad header")),
+            patch.object(deps._auth_service, "get_jwks", new=AsyncMock(return_value=MOCK_JWKS)),
+            patch("app.auth.service.jwt.get_unverified_header", side_effect=JWTError("bad header")),
             patch("app.auth.dependencies.FindOrCreateUserOperation") as MockOperation,
         ):
             mock_instance = MagicMock()
@@ -173,8 +173,8 @@ class TestRequireAuth0TokenDoesNotCallFindOrCreateOnError:
     async def test_does_not_call_find_or_create_when_key_not_found(self, db_session: AsyncSession):
         with (
             patch.dict(os.environ, MOCK_ENV),
-            patch("app.auth.dependencies._get_jwks", new=AsyncMock(return_value={"keys": []})),
-            patch("app.auth.dependencies.jwt.get_unverified_header", return_value={"kid": "no-such-key"}),
+            patch.object(deps._auth_service, "get_jwks", new=AsyncMock(return_value={"keys": []})),
+            patch("app.auth.service.jwt.get_unverified_header", return_value={"kid": "no-such-key"}),
             patch("app.auth.dependencies.FindOrCreateUserOperation") as MockOperation,
         ):
             mock_instance = MagicMock()
@@ -196,9 +196,9 @@ class TestRequireAuth0TokenDoesNotCallFindOrCreateOnError:
 
         with (
             patch.dict(os.environ, MOCK_ENV),
-            patch("app.auth.dependencies._get_jwks", new=AsyncMock(return_value=MOCK_JWKS)),
-            patch("app.auth.dependencies.jwt.get_unverified_header", return_value={"kid": "test-key-id"}),
-            patch("app.auth.dependencies.jwt.decode", side_effect=JWTError("invalid")),
+            patch.object(deps._auth_service, "get_jwks", new=AsyncMock(return_value=MOCK_JWKS)),
+            patch("app.auth.service.jwt.get_unverified_header", return_value={"kid": "test-key-id"}),
+            patch("app.auth.service.jwt.decode", side_effect=JWTError("invalid")),
             patch("app.auth.dependencies.FindOrCreateUserOperation") as MockOperation,
         ):
             mock_instance = MagicMock()
