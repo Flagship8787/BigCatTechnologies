@@ -11,6 +11,7 @@ from app.auth.dependencies import require_auth0_token
 from app.auth.token import SessionToken
 
 VALID_SUB = "auth0|testuser123"
+MOCK_TOKEN = "mock.jwt.token"
 
 MOCK_JWKS = {
     "keys": [
@@ -41,7 +42,7 @@ MOCK_ENV = {
 }
 
 
-def make_credentials(token: str = "mock.jwt.token") -> HTTPAuthorizationCredentials:
+def make_credentials(token: str = MOCK_TOKEN) -> HTTPAuthorizationCredentials:
     return HTTPAuthorizationCredentials(scheme="Bearer", credentials=token)
 
 
@@ -58,89 +59,85 @@ class TestRequireAuth0TokenCallsFindOrCreateUser:
 
     @pytest.mark.asyncio
     async def test_calls_find_or_create_with_sub_from_token(self, db_session: AsyncSession):
-        with (
-            patch.dict(os.environ, MOCK_ENV),
-            patch.object(deps._auth_service, "get_jwks", new=AsyncMock(return_value=MOCK_JWKS)),
-            patch("app.auth.service.jwt.get_unverified_header", return_value={"kid": "test-key-id"}),
-            patch("app.auth.service.jwt.decode", return_value=MOCK_PAYLOAD),
-            patch("app.auth.dependencies.FindOrCreateUserOperation") as MockOperation,
-        ):
-            mock_instance = MagicMock()
-            mock_instance.perform_in = AsyncMock()
-            MockOperation.return_value = mock_instance
+        with patch.dict(os.environ, MOCK_ENV):
+            with patch.object(deps._auth_service, "get_jwks", new=AsyncMock(return_value=MOCK_JWKS)):
+                with patch("app.auth.service.jwt.get_unverified_header", return_value={"kid": "test-key-id"}):
+                    with patch("app.auth.service.jwt.decode", return_value=MOCK_PAYLOAD):
+                        with patch("app.auth.dependencies.FindOrCreateUserOperation") as MockOperation:
+                            mock_instance = MagicMock()
+                            mock_instance.perform_in = AsyncMock()
+                            MockOperation.return_value = mock_instance
 
-            await require_auth0_token(
-                credentials=make_credentials(),
-                db=db_session,
-            )
+                            await require_auth0_token(
+                                credentials=make_credentials(),
+                                db=db_session,
+                            )
 
-            MockOperation.assert_called_once()
-            mock_instance.perform_in.assert_awaited_once_with(db_session, auth0_id=VALID_SUB)
+                            MockOperation.assert_called_once()
+                            mock_instance.perform_in.assert_awaited_once_with(
+                                db_session, auth0_id=VALID_SUB, access_token=MOCK_TOKEN
+                            )
 
     @pytest.mark.asyncio
     async def test_passes_db_session_to_find_or_create(self, db_session: AsyncSession):
-        with (
-            patch.dict(os.environ, MOCK_ENV),
-            patch.object(deps._auth_service, "get_jwks", new=AsyncMock(return_value=MOCK_JWKS)),
-            patch("app.auth.service.jwt.get_unverified_header", return_value={"kid": "test-key-id"}),
-            patch("app.auth.service.jwt.decode", return_value=MOCK_PAYLOAD),
-            patch("app.auth.dependencies.FindOrCreateUserOperation") as MockOperation,
-        ):
-            mock_instance = MagicMock()
-            mock_instance.perform_in = AsyncMock()
-            MockOperation.return_value = mock_instance
+        with patch.dict(os.environ, MOCK_ENV):
+            with patch.object(deps._auth_service, "get_jwks", new=AsyncMock(return_value=MOCK_JWKS)):
+                with patch("app.auth.service.jwt.get_unverified_header", return_value={"kid": "test-key-id"}):
+                    with patch("app.auth.service.jwt.decode", return_value=MOCK_PAYLOAD):
+                        with patch("app.auth.dependencies.FindOrCreateUserOperation") as MockOperation:
+                            mock_instance = MagicMock()
+                            mock_instance.perform_in = AsyncMock()
+                            MockOperation.return_value = mock_instance
 
-            await require_auth0_token(
-                credentials=make_credentials(),
-                db=db_session,
-            )
+                            await require_auth0_token(
+                                credentials=make_credentials(),
+                                db=db_session,
+                            )
 
-            call_kwargs = mock_instance.perform_in.call_args
-            assert call_kwargs.args[0] is db_session
+                            call_kwargs = mock_instance.perform_in.call_args
+                            assert call_kwargs.args[0] is db_session
 
     @pytest.mark.asyncio
     async def test_passes_auth0_id_matching_token_sub(self, db_session: AsyncSession):
         custom_sub = "auth0|differentuser999"
         payload = {**MOCK_PAYLOAD, "sub": custom_sub}
 
-        with (
-            patch.dict(os.environ, MOCK_ENV),
-            patch.object(deps._auth_service, "get_jwks", new=AsyncMock(return_value=MOCK_JWKS)),
-            patch("app.auth.service.jwt.get_unverified_header", return_value={"kid": "test-key-id"}),
-            patch("app.auth.service.jwt.decode", return_value=payload),
-            patch("app.auth.dependencies.FindOrCreateUserOperation") as MockOperation,
-        ):
-            mock_instance = MagicMock()
-            mock_instance.perform_in = AsyncMock()
-            MockOperation.return_value = mock_instance
+        with patch.dict(os.environ, MOCK_ENV):
+            with patch.object(deps._auth_service, "get_jwks", new=AsyncMock(return_value=MOCK_JWKS)):
+                with patch("app.auth.service.jwt.get_unverified_header", return_value={"kid": "test-key-id"}):
+                    with patch("app.auth.service.jwt.decode", return_value=payload):
+                        with patch("app.auth.dependencies.FindOrCreateUserOperation") as MockOperation:
+                            mock_instance = MagicMock()
+                            mock_instance.perform_in = AsyncMock()
+                            MockOperation.return_value = mock_instance
 
-            await require_auth0_token(
-                credentials=make_credentials(),
-                db=db_session,
-            )
+                            await require_auth0_token(
+                                credentials=make_credentials(),
+                                db=db_session,
+                            )
 
-            mock_instance.perform_in.assert_awaited_once_with(db_session, auth0_id=custom_sub)
+                            mock_instance.perform_in.assert_awaited_once_with(
+                                db_session, auth0_id=custom_sub, access_token=MOCK_TOKEN
+                            )
 
     @pytest.mark.asyncio
     async def test_returns_session_token_after_find_or_create(self, db_session: AsyncSession):
-        with (
-            patch.dict(os.environ, MOCK_ENV),
-            patch.object(deps._auth_service, "get_jwks", new=AsyncMock(return_value=MOCK_JWKS)),
-            patch("app.auth.service.jwt.get_unverified_header", return_value={"kid": "test-key-id"}),
-            patch("app.auth.service.jwt.decode", return_value=MOCK_PAYLOAD),
-            patch("app.auth.dependencies.FindOrCreateUserOperation") as MockOperation,
-        ):
-            mock_instance = MagicMock()
-            mock_instance.perform_in = AsyncMock()
-            MockOperation.return_value = mock_instance
+        with patch.dict(os.environ, MOCK_ENV):
+            with patch.object(deps._auth_service, "get_jwks", new=AsyncMock(return_value=MOCK_JWKS)):
+                with patch("app.auth.service.jwt.get_unverified_header", return_value={"kid": "test-key-id"}):
+                    with patch("app.auth.service.jwt.decode", return_value=MOCK_PAYLOAD):
+                        with patch("app.auth.dependencies.FindOrCreateUserOperation") as MockOperation:
+                            mock_instance = MagicMock()
+                            mock_instance.perform_in = AsyncMock()
+                            MockOperation.return_value = mock_instance
 
-            result = await require_auth0_token(
-                credentials=make_credentials(),
-                db=db_session,
-            )
+                            result = await require_auth0_token(
+                                credentials=make_credentials(),
+                                db=db_session,
+                            )
 
-            assert isinstance(result, SessionToken)
-            assert result.sub == VALID_SUB
+                            assert isinstance(result, SessionToken)
+                            assert result.sub == VALID_SUB
 
 
 class TestRequireAuth0TokenDoesNotCallFindOrCreateOnError:
@@ -150,66 +147,60 @@ class TestRequireAuth0TokenDoesNotCallFindOrCreateOnError:
     async def test_does_not_call_find_or_create_on_invalid_token_header(self, db_session: AsyncSession):
         from jose import JWTError
 
-        with (
-            patch.dict(os.environ, MOCK_ENV),
-            patch.object(deps._auth_service, "get_jwks", new=AsyncMock(return_value=MOCK_JWKS)),
-            patch("app.auth.service.jwt.get_unverified_header", side_effect=JWTError("bad header")),
-            patch("app.auth.dependencies.FindOrCreateUserOperation") as MockOperation,
-        ):
-            mock_instance = MagicMock()
-            mock_instance.perform_in = AsyncMock()
-            MockOperation.return_value = mock_instance
+        with patch.dict(os.environ, MOCK_ENV):
+            with patch.object(deps._auth_service, "get_jwks", new=AsyncMock(return_value=MOCK_JWKS)):
+                with patch("app.auth.service.jwt.get_unverified_header", side_effect=JWTError("bad header")):
+                    with patch("app.auth.dependencies.FindOrCreateUserOperation") as MockOperation:
+                        mock_instance = MagicMock()
+                        mock_instance.perform_in = AsyncMock()
+                        MockOperation.return_value = mock_instance
 
-            with pytest.raises(HTTPException) as exc_info:
-                await require_auth0_token(
-                    credentials=make_credentials("bad.token"),
-                    db=db_session,
-                )
+                        with pytest.raises(HTTPException) as exc_info:
+                            await require_auth0_token(
+                                credentials=make_credentials("bad.token"),
+                                db=db_session,
+                            )
 
-            assert exc_info.value.status_code == 401
-            mock_instance.perform_in.assert_not_awaited()
+                        assert exc_info.value.status_code == 401
+                        mock_instance.perform_in.assert_not_awaited()
 
     @pytest.mark.asyncio
     async def test_does_not_call_find_or_create_when_key_not_found(self, db_session: AsyncSession):
-        with (
-            patch.dict(os.environ, MOCK_ENV),
-            patch.object(deps._auth_service, "get_jwks", new=AsyncMock(return_value={"keys": []})),
-            patch("app.auth.service.jwt.get_unverified_header", return_value={"kid": "no-such-key"}),
-            patch("app.auth.dependencies.FindOrCreateUserOperation") as MockOperation,
-        ):
-            mock_instance = MagicMock()
-            mock_instance.perform_in = AsyncMock()
-            MockOperation.return_value = mock_instance
+        with patch.dict(os.environ, MOCK_ENV):
+            with patch.object(deps._auth_service, "get_jwks", new=AsyncMock(return_value={"keys": []})):
+                with patch("app.auth.service.jwt.get_unverified_header", return_value={"kid": "no-such-key"}):
+                    with patch("app.auth.dependencies.FindOrCreateUserOperation") as MockOperation:
+                        mock_instance = MagicMock()
+                        mock_instance.perform_in = AsyncMock()
+                        MockOperation.return_value = mock_instance
 
-            with pytest.raises(HTTPException) as exc_info:
-                await require_auth0_token(
-                    credentials=make_credentials(),
-                    db=db_session,
-                )
+                        with pytest.raises(HTTPException) as exc_info:
+                            await require_auth0_token(
+                                credentials=make_credentials(),
+                                db=db_session,
+                            )
 
-            assert exc_info.value.status_code == 401
-            mock_instance.perform_in.assert_not_awaited()
+                        assert exc_info.value.status_code == 401
+                        mock_instance.perform_in.assert_not_awaited()
 
     @pytest.mark.asyncio
     async def test_does_not_call_find_or_create_on_invalid_jwt(self, db_session: AsyncSession):
         from jose import JWTError
 
-        with (
-            patch.dict(os.environ, MOCK_ENV),
-            patch.object(deps._auth_service, "get_jwks", new=AsyncMock(return_value=MOCK_JWKS)),
-            patch("app.auth.service.jwt.get_unverified_header", return_value={"kid": "test-key-id"}),
-            patch("app.auth.service.jwt.decode", side_effect=JWTError("invalid")),
-            patch("app.auth.dependencies.FindOrCreateUserOperation") as MockOperation,
-        ):
-            mock_instance = MagicMock()
-            mock_instance.perform_in = AsyncMock()
-            MockOperation.return_value = mock_instance
+        with patch.dict(os.environ, MOCK_ENV):
+            with patch.object(deps._auth_service, "get_jwks", new=AsyncMock(return_value=MOCK_JWKS)):
+                with patch("app.auth.service.jwt.get_unverified_header", return_value={"kid": "test-key-id"}):
+                    with patch("app.auth.service.jwt.decode", side_effect=JWTError("invalid")):
+                        with patch("app.auth.dependencies.FindOrCreateUserOperation") as MockOperation:
+                            mock_instance = MagicMock()
+                            mock_instance.perform_in = AsyncMock()
+                            MockOperation.return_value = mock_instance
 
-            with pytest.raises(HTTPException) as exc_info:
-                await require_auth0_token(
-                    credentials=make_credentials(),
-                    db=db_session,
-                )
+                            with pytest.raises(HTTPException) as exc_info:
+                                await require_auth0_token(
+                                    credentials=make_credentials(),
+                                    db=db_session,
+                                )
 
-            assert exc_info.value.status_code == 401
-            mock_instance.perform_in.assert_not_awaited()
+                            assert exc_info.value.status_code == 401
+                            mock_instance.perform_in.assert_not_awaited()

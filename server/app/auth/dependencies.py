@@ -19,7 +19,7 @@ async def require_auth0_token(
 ) -> SessionToken:
     token = credentials.credentials
     session_token = await _auth_service.validate_token(token)
-    await FindOrCreateUserOperation().perform_in(db, auth0_id=session_token.sub)
+    await FindOrCreateUserOperation().perform_in(db, auth0_id=session_token.sub, access_token=token)
     return session_token
 
 
