@@ -8,6 +8,7 @@ from app.controllers import posts as posts_controller
 from app.controllers.admin import blogs as admin_blogs_controller
 from app.controllers.admin import posts as admin_posts_controller
 from app.controllers.admin import users as admin_users_controller
+from app.controllers.auth import linkedin as linkedin_controller
 
 from app.mcp.posts import tools as mcp_tools
 from app.mcp.auth import auth
@@ -35,5 +36,6 @@ posts_controller.register(app)
 admin_blogs_controller.register(app)
 admin_posts_controller.register(app)
 admin_users_controller.register(app)
+linkedin_controller.register(app)
 
 app.mount('/', mcp_app)
