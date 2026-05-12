@@ -7,6 +7,9 @@ import {
   TableRow,
   CircularProgress,
   Typography,
+  Avatar,
+  Chip,
+  Box,
 } from '@mui/material'
 import { PageContainer } from '@toolpad/core/PageContainer'
 import { useUsers } from '../../hooks/admin/useUsers'
@@ -26,21 +29,43 @@ export default function AllUsers() {
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell>ID</TableCell>
-              <TableCell>Auth0 ID</TableCell>
+              <TableCell>Avatar</TableCell>
+              <TableCell>Name</TableCell>
+              <TableCell>Email</TableCell>
               <TableCell>Created</TableCell>
-              <TableCell>Updated</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {users.map((user) => (
-              <TableRow key={user.id}>
-                <TableCell>{user.id}</TableCell>
-                <TableCell>{user.auth0_id}</TableCell>
-                <TableCell>{new Date(user.created_at).toLocaleDateString()}</TableCell>
-                <TableCell>{new Date(user.updated_at).toLocaleDateString()}</TableCell>
-              </TableRow>
-            ))}
+            {users.map((user) => {
+              const initials = (user.name ?? user.email ?? '?')[0].toUpperCase()
+              return (
+                <TableRow key={user.id}>
+                  <TableCell>
+                    {user.picture ? (
+                      <Avatar src={user.picture} sx={{ width: 32, height: 32 }} />
+                    ) : (
+                      <Avatar sx={{ width: 32, height: 32, fontSize: 14 }}>{initials}</Avatar>
+                    )}
+                  </TableCell>
+                  <TableCell>{user.name ?? '—'}</TableCell>
+                  <TableCell>
+                    {user.email ? (
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <span>{user.email}</span>
+                        {user.email_verified ? (
+                          <Chip label="Verified" color="success" size="small" />
+                        ) : (
+                          <Chip label="Unverified" color="warning" size="small" />
+                        )}
+                      </Box>
+                    ) : (
+                      '—'
+                    )}
+                  </TableCell>
+                  <TableCell>{new Date(user.created_at).toLocaleDateString()}</TableCell>
+                </TableRow>
+              )
+            })}
           </TableBody>
         </Table>
       )}

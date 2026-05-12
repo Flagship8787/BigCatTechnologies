@@ -108,7 +108,7 @@ async def test_list_users_returns_correct_fields(users_admin_app: FastAPI, db_se
     body = response.json()
     assert len(body) == 1
     user = body[0]
-    assert set(user.keys()) == {"id", "auth0_id", "created_at", "updated_at"}
+    assert set(user.keys()) == {"id", "auth0_id", "email", "email_verified", "name", "picture", "created_at", "updated_at"}
 
 
 @pytest.mark.asyncio
