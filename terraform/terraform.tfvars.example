@@ -22,6 +22,10 @@ auth0_mcp_client_id = "your-mcp-client-id"        # Regular Web Application (MCP
 api_base_url        = "https://your-cloud-run-service-url"
 auth0_redirect_path = "/oauth/callback"
 
+# LinkedIn OAuth
+linkedin_client_id    = "your-linkedin-client-id"
+# linkedin_redirect_uri defaults to https://api.bigcattechnologies.com/auth/linkedin/callback
+
 # ---------------------------------------------------------------------------
 # Secrets — do NOT put these in terraform.tfvars.
 # Set them as environment variables before running terraform apply:

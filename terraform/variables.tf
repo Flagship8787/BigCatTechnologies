@@ -129,3 +129,20 @@ variable "auth0_redirect_path" {
   type        = string
   default     = "/oauth/callback"
 }
+
+variable "linkedin_client_id" {
+  description = "LinkedIn OAuth app client ID"
+  type        = string
+}
+
+variable "linkedin_client_secret" {
+  description = "LinkedIn OAuth app client secret"
+  type        = string
+  sensitive   = true
+}
+
+variable "linkedin_redirect_uri" {
+  description = "LinkedIn OAuth redirect URI"
+  type        = string
+  default     = "https://api.bigcattechnologies.com/auth/linkedin/callback"
+}

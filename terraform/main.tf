@@ -193,6 +193,7 @@ resource "google_cloud_run_v2_service" "server" {
     google_secret_manager_secret_iam_member.cloud_run_server_x_api_key_secret,
     google_secret_manager_secret_iam_member.cloud_run_server_x_access_token,
     google_secret_manager_secret_iam_member.cloud_run_server_x_access_token_secret,
+    google_secret_manager_secret_iam_member.cloud_run_server_linkedin_client_secret,
   ]
 
   # CI deploys new image revisions via gcloud — Terraform manages config only.
@@ -365,6 +366,25 @@ resource "google_cloud_run_v2_service" "server" {
         value_source {
           secret_key_ref {
             secret  = google_secret_manager_secret.x_access_token_secret.secret_id
+            version = "latest"
+          }
+        }
+      }
+
+      # LinkedIn OAuth
+      env {
+        name  = "LINKEDIN_CLIENT_ID"
+        value = var.linkedin_client_id
+      }
+      env {
+        name  = "LINKEDIN_REDIRECT_URI"
+        value = var.linkedin_redirect_uri
+      }
+      env {
+        name = "LINKEDIN_CLIENT_SECRET"
+        value_source {
+          secret_key_ref {
+            secret  = google_secret_manager_secret.linkedin_client_secret.secret_id
             version = "latest"
           }
         }
@@ -631,6 +651,27 @@ resource "google_secret_manager_secret_version" "x_access_token_secret" {
 
 resource "google_secret_manager_secret_iam_member" "cloud_run_server_x_access_token_secret" {
   secret_id = google_secret_manager_secret.x_access_token_secret.id
+  role      = "roles/secretmanager.secretAccessor"
+  member    = "serviceAccount:${google_service_account.cloud_run_server.email}"
+}
+
+# Store LinkedIn client secret in Secret Manager
+resource "google_secret_manager_secret" "linkedin_client_secret" {
+  secret_id  = "bigcat-linkedin-client-secret"
+  depends_on = [google_project_service.secretmanager]
+
+  replication {
+    auto {}
+  }
+}
+
+resource "google_secret_manager_secret_version" "linkedin_client_secret" {
+  secret      = google_secret_manager_secret.linkedin_client_secret.id
+  secret_data = var.linkedin_client_secret
+}
+
+resource "google_secret_manager_secret_iam_member" "cloud_run_server_linkedin_client_secret" {
+  secret_id = google_secret_manager_secret.linkedin_client_secret.id
   role      = "roles/secretmanager.secretAccessor"
   member    = "serviceAccount:${google_service_account.cloud_run_server.email}"
 }
